@@ -1,21 +1,15 @@
+server:
+  servlet:
+    context-path: /v1
+
 spring:
   application:
     name: CajaViva
-
-  server:
-    servlet:
-      context-path: /v1
-
   datasource:
-    url: ${DB_URL:jdbc:sqlserver://localhost:1433;database=CajaViva;encrypt=true;trustServerCertificate=true}
+    url: ${DB_URL:jdbc:sqlserver://localhost:1433;databaseName=CajaViva;encrypt=true;trustServerCertificate=true}
     username: ${DB_USER:sa}
     password: ${DB_PASSWORD:admin}
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-
   jpa:
     show-sql: true
     hibernate:
@@ -23,18 +17,13 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.SQLServerDialect
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
 
-# Swagger / OpenAPI
 springdoc:
   api-docs:
-    enabled: false 
+    enabled: true
     path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
-
-spring:
-  datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: ""
