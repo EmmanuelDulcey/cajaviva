@@ -1,5 +1,5 @@
-CREATE TABLE Persons (
-    person_id UNIQUEIDENTIFIER DEFAULT NEWSEQUENTIALID() PRIMARY KEY,
+CREATE TABLE Users (
+    user_id UNIQUEIDENTIFIER DEFAULT NEWSEQUENTIALID() PRIMARY KEY,
     name NVARCHAR(100) NOT NULL,
     last_name NVARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
@@ -16,8 +16,8 @@ CREATE TABLE Accounts (
     balance MONEY NOT NULL CHECK (balance >= 0),
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
-    person_id UNIQUEIDENTIFIER NOT NULL,
-    FOREIGN KEY (person_id) REFERENCES Persons(person_id)
+    user_id UNIQUEIDENTIFIER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id)
 );
 
 CREATE TABLE Categories (
@@ -31,7 +31,6 @@ CREATE TABLE Categories (
 
 CREATE TABLE FinancialTransactions (
     transaction_id UNIQUEIDENTIFIER DEFAULT NEWSEQUENTIALID() PRIMARY KEY,
-    type TINYINT NOT NULL,
     value MONEY NOT NULL CHECK (value >= 0),
     description VARCHAR(500),
     date DATETIME NOT NULL,
@@ -55,9 +54,10 @@ CREATE TABLE RecurrentTransactions (
     updated_at DATETIME NOT NULL,
     account_id UNIQUEIDENTIFIER NOT NULL,
     category_id UNIQUEIDENTIFIER NOT NULL,
+    CONSTRAINT chk_recurrent_transactions_custom_frequency_positive CHECK (custom_frequency IS NULL OR custom_frequency > 0),
     FOREIGN KEY (account_id) REFERENCES Accounts(account_id),
     FOREIGN KEY (category_id) REFERENCES Categories(category_id),
-    CONSTRAINT chk_dates CHECK (end_date IS NULL OR end_date >= initial_date)
+    CONSTRAINT chk_recurrent_transactions_dates CHECK (end_date IS NULL OR end_date >= initial_date)
 );
 
 CREATE TABLE LiquidityProjections (
@@ -88,7 +88,33 @@ CREATE TABLE UserAccesses (
     role TINYINT NOT NULL,
     created_at DATETIME NOT NULL,
     account_id UNIQUEIDENTIFIER NOT NULL,
-    person_id UNIQUEIDENTIFIER NOT NULL,
+    user_id UNIQUEIDENTIFIER NOT NULL,
+    CONSTRAINT uq_user_accesses_account_user UNIQUE (account_id, user_id),
     FOREIGN KEY (account_id) REFERENCES Accounts(account_id),
-    FOREIGN KEY (person_id) REFERENCES Persons(person_id)
+    FOREIGN KEY (user_id) REFERENCES Users(user_id)
 );
+
+CREATE INDEX ix_users_last_name_name ON Users(last_name, name);
+CREATE INDEX ix_users_active ON Users(active);
+
+CREATE INDEX ix_accounts_user_id ON Accounts(user_id);
+CREATE INDEX ix_accounts_account_type ON Accounts(account_type);
+
+CREATE INDEX ix_categories_type ON Categories(type);
+
+CREATE INDEX ix_financial_transactions_account_id_date ON FinancialTransactions(account_id, date DESC);
+CREATE INDEX ix_financial_transactions_category_id_date ON FinancialTransactions(category_id, date DESC);
+CREATE INDEX ix_financial_transactions_status_date ON FinancialTransactions(status, date DESC);
+
+CREATE INDEX ix_recurrent_transactions_account_id_initial_date ON RecurrentTransactions(account_id, initial_date);
+CREATE INDEX ix_recurrent_transactions_category_id ON RecurrentTransactions(category_id);
+CREATE INDEX ix_recurrent_transactions_end_date ON RecurrentTransactions(end_date);
+
+CREATE INDEX ix_liquidity_projections_account_id_projection_date ON LiquidityProjections(account_id, projection_date);
+CREATE INDEX ix_liquidity_projections_calculation_date ON LiquidityProjections(calculation_date);
+
+CREATE INDEX ix_alerts_liquidity_projection_id ON Alerts(liquidity_projection_id);
+CREATE INDEX ix_alerts_status_date ON Alerts(status, date);
+CREATE INDEX ix_alerts_type_date ON Alerts(type, date);
+
+CREATE INDEX ix_user_accesses_user_id ON UserAccesses(user_id);
