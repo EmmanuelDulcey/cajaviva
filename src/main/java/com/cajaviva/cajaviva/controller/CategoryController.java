@@ -1,6 +1,6 @@
 package com.cajaviva.cajaviva.controller;
 
-import com.cajaviva.cajaviva.dao.CategoryRepository;
+import com.cajaviva.cajaviva.dao.CategoryDao;
 import com.cajaviva.cajaviva.entity.Category;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,24 +11,24 @@ import java.util.UUID;
 @RequestMapping("/api/categories")
 public class CategoryController {
 
-    private final CategoryRepository categoryRepository;
+    private final CategoryDao categoryDao;
 
-    public CategoryController(CategoryRepository categoryRepository) {
-        this.categoryRepository = categoryRepository;
+    public CategoryController(CategoryDao categoryDao) {
+        this.categoryDao = categoryDao;
     }
 
     @GetMapping
     public List<Category> getAllCategories() {
-        return categoryRepository.findAll();
+        return categoryDao.findAll();
     }
 
     @GetMapping("/{id}")
     public Category getCategoryById(@PathVariable UUID id) {
-        return categoryRepository.findById(id).orElse(null);
+        return categoryDao.findById(id).orElse(null);
     }
 
     @PostMapping
     public Category createCategory(@RequestBody Category category) {
-        return categoryRepository.save(category);
+        return categoryDao.save(category);
     }
 }

@@ -1,6 +1,6 @@
 package com.cajaviva.cajaviva.controller;
 
-import com.cajaviva.cajaviva.dao.LiquidityProjectionRepository;
+import com.cajaviva.cajaviva.dao.LiquidityProjectionDao;
 import com.cajaviva.cajaviva.entity.LiquidityProjection;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,24 +11,24 @@ import java.util.UUID;
 @RequestMapping("/api/liquidity-projections")
 public class LiquidityProjectionController {
 
-    private final LiquidityProjectionRepository liquidityProjectionRepository;
+    private final LiquidityProjectionDao liquidityProjectionDao;
 
-    public LiquidityProjectionController(LiquidityProjectionRepository liquidityProjectionRepository) {
-        this.liquidityProjectionRepository = liquidityProjectionRepository;
+    public LiquidityProjectionController(LiquidityProjectionDao liquidityProjectionDao) {
+        this.liquidityProjectionDao = liquidityProjectionDao;
     }
 
     @GetMapping
     public List<LiquidityProjection> getAllProjections() {
-        return liquidityProjectionRepository.findAll();
+        return liquidityProjectionDao.findAll();
     }
 
-    @GetMapping("/account/{accountId}")
-    public List<LiquidityProjection> getByAccount(@PathVariable UUID accountId) {
-        return liquidityProjectionRepository.findByAccountId(accountId);
+    @GetMapping("/account/{account_id}")
+    public List<LiquidityProjection> getByAccount(@PathVariable("account_id") UUID account_id) {
+        return liquidityProjectionDao.findByAccountId(account_id);
     }
 
     @PostMapping
     public LiquidityProjection createProjection(@RequestBody LiquidityProjection projection) {
-        return liquidityProjectionRepository.save(projection);
+        return liquidityProjectionDao.save(projection);
     }
 }
