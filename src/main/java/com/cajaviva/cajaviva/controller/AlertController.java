@@ -1,6 +1,6 @@
 package com.cajaviva.cajaviva.controller;
 
-import com.cajaviva.cajaviva.dao.AlertRepository;
+import com.cajaviva.cajaviva.dao.AlertDao;
 import com.cajaviva.cajaviva.entity.Alert;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,24 +11,24 @@ import java.util.UUID;
 @RequestMapping("/api/alerts")
 public class AlertController {
 
-    private final AlertRepository alertRepository;
+    private final AlertDao alertDao;
 
-    public AlertController(AlertRepository alertRepository) {
-        this.alertRepository = alertRepository;
+    public AlertController(AlertDao alertDao) {
+        this.alertDao = alertDao;
     }
 
     @GetMapping
     public List<Alert> getAllAlerts() {
-        return alertRepository.findAll();
+        return alertDao.findAll();
     }
 
-    @GetMapping("/projection/{projectionId}")
-    public List<Alert> getByProjection(@PathVariable UUID projectionId) {
-        return alertRepository.findByLiquidityProjectionId(projectionId);
+    @GetMapping("/projection/{projection_id}")
+    public List<Alert> getByProjection(@PathVariable("projection_id") UUID projection_id) {
+        return alertDao.findByLiquidityProjectionId(projection_id);
     }
 
     @PostMapping
     public Alert createAlert(@RequestBody Alert alert) {
-        return alertRepository.save(alert);
+        return alertDao.save(alert);
     }
 }

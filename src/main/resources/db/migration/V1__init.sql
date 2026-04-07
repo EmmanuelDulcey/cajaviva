@@ -1,5 +1,5 @@
 CREATE TABLE Users (
-    user_id UNIQUEIDENTIFIER DEFAULT NEWSEQUENTIALID() PRIMARY KEY,
+    id UNIQUEIDENTIFIER DEFAULT NEWSEQUENTIALID() PRIMARY KEY,
     name NVARCHAR(100) NOT NULL,
     last_name NVARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
@@ -10,18 +10,18 @@ CREATE TABLE Users (
 );
 
 CREATE TABLE Accounts (
-    account_id UNIQUEIDENTIFIER DEFAULT NEWSEQUENTIALID() PRIMARY KEY,
+    id UNIQUEIDENTIFIER DEFAULT NEWSEQUENTIALID() PRIMARY KEY,
     name NVARCHAR(150) NOT NULL,
     account_type TINYINT NOT NULL,
     balance MONEY NOT NULL CHECK (balance >= 0),
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
     user_id UNIQUEIDENTIFIER NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES Users(user_id)
+    FOREIGN KEY (user_id) REFERENCES Users(id)
 );
 
 CREATE TABLE Categories (
-    category_id UNIQUEIDENTIFIER DEFAULT NEWSEQUENTIALID() PRIMARY KEY,
+    id UNIQUEIDENTIFIER DEFAULT NEWSEQUENTIALID() PRIMARY KEY,
     name NVARCHAR(100) NOT NULL UNIQUE,
     type TINYINT NOT NULL,
     description VARCHAR(500),
@@ -30,7 +30,7 @@ CREATE TABLE Categories (
 );
 
 CREATE TABLE FinancialTransactions (
-    transaction_id UNIQUEIDENTIFIER DEFAULT NEWSEQUENTIALID() PRIMARY KEY,
+    id UNIQUEIDENTIFIER DEFAULT NEWSEQUENTIALID() PRIMARY KEY,
     value MONEY NOT NULL CHECK (value >= 0),
     description VARCHAR(500),
     date DATETIME NOT NULL,
@@ -39,12 +39,12 @@ CREATE TABLE FinancialTransactions (
     category_id UNIQUEIDENTIFIER,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
-    FOREIGN KEY (account_id) REFERENCES Accounts(account_id),
-    FOREIGN KEY (category_id) REFERENCES Categories(category_id)
+    FOREIGN KEY (account_id) REFERENCES Accounts(id),
+    FOREIGN KEY (category_id) REFERENCES Categories(id)
 );
 
 CREATE TABLE RecurrentTransactions (
-    recurrent_transaction_id UNIQUEIDENTIFIER DEFAULT NEWSEQUENTIALID() PRIMARY KEY,
+    id UNIQUEIDENTIFIER DEFAULT NEWSEQUENTIALID() PRIMARY KEY,
     value MONEY NOT NULL CHECK (value >= 0),
     initial_date DATE NOT NULL,
     end_date DATE,
@@ -55,24 +55,24 @@ CREATE TABLE RecurrentTransactions (
     account_id UNIQUEIDENTIFIER NOT NULL,
     category_id UNIQUEIDENTIFIER NOT NULL,
     CONSTRAINT chk_recurrent_transactions_custom_frequency_positive CHECK (custom_frequency IS NULL OR custom_frequency > 0),
-    FOREIGN KEY (account_id) REFERENCES Accounts(account_id),
-    FOREIGN KEY (category_id) REFERENCES Categories(category_id),
+    FOREIGN KEY (account_id) REFERENCES Accounts(id),
+    FOREIGN KEY (category_id) REFERENCES Categories(id),
     CONSTRAINT chk_recurrent_transactions_dates CHECK (end_date IS NULL OR end_date >= initial_date)
 );
 
 CREATE TABLE LiquidityProjections (
-    projection_id UNIQUEIDENTIFIER DEFAULT NEWSEQUENTIALID() PRIMARY KEY,
+    id UNIQUEIDENTIFIER DEFAULT NEWSEQUENTIALID() PRIMARY KEY,
     calculation_date DATETIME NOT NULL,
     projected_balance MONEY NOT NULL,
     projection_date DATE NOT NULL,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
     account_id UNIQUEIDENTIFIER NOT NULL,
-    FOREIGN KEY (account_id) REFERENCES Accounts(account_id)
+    FOREIGN KEY (account_id) REFERENCES Accounts(id)
 );
 
 CREATE TABLE Alerts (
-    alert_id UNIQUEIDENTIFIER DEFAULT NEWSEQUENTIALID() PRIMARY KEY,
+    id UNIQUEIDENTIFIER DEFAULT NEWSEQUENTIALID() PRIMARY KEY,
     type TINYINT NOT NULL,
     message VARCHAR(500) NOT NULL,
     date DATE NOT NULL,
@@ -80,18 +80,18 @@ CREATE TABLE Alerts (
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
     liquidity_projection_id UNIQUEIDENTIFIER NOT NULL,
-    FOREIGN KEY (liquidity_projection_id) REFERENCES LiquidityProjections(projection_id)
+    FOREIGN KEY (liquidity_projection_id) REFERENCES LiquidityProjections(id)
 );
 
 CREATE TABLE UserAccesses (
-    user_access_id UNIQUEIDENTIFIER DEFAULT NEWSEQUENTIALID() PRIMARY KEY,
+    id UNIQUEIDENTIFIER DEFAULT NEWSEQUENTIALID() PRIMARY KEY,
     role TINYINT NOT NULL,
     created_at DATETIME NOT NULL,
     account_id UNIQUEIDENTIFIER NOT NULL,
     user_id UNIQUEIDENTIFIER NOT NULL,
     CONSTRAINT uq_user_accesses_account_user UNIQUE (account_id, user_id),
-    FOREIGN KEY (account_id) REFERENCES Accounts(account_id),
-    FOREIGN KEY (user_id) REFERENCES Users(user_id)
+    FOREIGN KEY (account_id) REFERENCES Accounts(id),
+    FOREIGN KEY (user_id) REFERENCES Users(id)
 );
 
 CREATE INDEX ix_users_last_name_name ON Users(last_name, name);

@@ -1,6 +1,6 @@
 package com.cajaviva.cajaviva.controller;
 
-import com.cajaviva.cajaviva.dao.AccountRepository;
+import com.cajaviva.cajaviva.dao.AccountDao;
 import com.cajaviva.cajaviva.entity.Account;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,24 +11,24 @@ import java.util.UUID;
 @RequestMapping("/api/accounts")
 public class AccountController {
 
-    private final AccountRepository accountRepository;
+    private final AccountDao accountDao;
 
-    public AccountController(AccountRepository accountRepository) {
-        this.accountRepository = accountRepository;
+    public AccountController(AccountDao accountDao) {
+        this.accountDao = accountDao;
     }
 
     @GetMapping
     public List<Account> getAllAccounts() {
-        return accountRepository.findAll();
+        return accountDao.findAll();
     }
 
-    @GetMapping("/person/{personId}")
-    public List<Account> getAccountsByPerson(@PathVariable UUID personId) {
-        return accountRepository.findByPersonId(personId);
+    @GetMapping("/user/{user_id}")
+    public List<Account> getAccountsByUser(@PathVariable("user_id") UUID user_id) {
+        return accountDao.findByUserId(user_id);
     }
 
     @PostMapping
     public Account createAccount(@RequestBody Account account) {
-        return accountRepository.save(account);
+        return accountDao.save(account);
     }
 }
