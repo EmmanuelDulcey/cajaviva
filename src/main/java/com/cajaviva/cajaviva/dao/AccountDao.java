@@ -8,4 +8,6 @@ import java.util.UUID;
 public interface AccountDao extends BaseDao<Account, UUID> {
 
     List<Account> findByUserId(UUID user_id);
+
+    List<Account> findByAccountType(Integer accountType);
 }

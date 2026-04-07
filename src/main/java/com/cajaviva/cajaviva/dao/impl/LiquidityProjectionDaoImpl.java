@@ -1,10 +1,13 @@
 package com.cajaviva.cajaviva.dao.impl;
 
 import com.cajaviva.cajaviva.dao.LiquidityProjectionDao;
-import com.cajaviva.cajaviva.dao.jpa.LiquidityProjectionJpaRepository;
+import com.cajaviva.cajaviva.entity.Account;
 import com.cajaviva.cajaviva.entity.LiquidityProjection;
+import com.cajaviva.cajaviva.utilities.Conexion;
 import org.springframework.stereotype.Repository;
 
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -12,39 +15,127 @@ import java.util.UUID;
 @Repository
 public class LiquidityProjectionDaoImpl implements LiquidityProjectionDao {
 
-    private final LiquidityProjectionJpaRepository liquidityProjectionJpaRepository;
+    private final Conexion conexion;
 
-    public LiquidityProjectionDaoImpl(LiquidityProjectionJpaRepository liquidityProjectionJpaRepository) {
-        this.liquidityProjectionJpaRepository = liquidityProjectionJpaRepository;
+    public LiquidityProjectionDaoImpl(Conexion conexion) {
+        this.conexion = conexion;
     }
 
     @Override
     public List<LiquidityProjection> findAll() {
-        return liquidityProjectionJpaRepository.findAll();
+        List<LiquidityProjection> result = new ArrayList<>();
+        try (Connection conn = conexion.obtenerConexion();
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM LiquidityProjections");
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                result.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 
     @Override
     public Optional<LiquidityProjection> findById(UUID id) {
-        return liquidityProjectionJpaRepository.findById(id);
+        LiquidityProjection lp = null;
+        try (Connection conn = conexion.obtenerConexion();
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM LiquidityProjections WHERE id = ?")) {
+
+            ps.setObject(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                lp = mapRow(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return Optional.ofNullable(lp);
     }
 
     @Override
     public LiquidityProjection save(LiquidityProjection entity) {
-        return liquidityProjectionJpaRepository.save(entity);
+        try (Connection conn = conexion.obtenerConexion();
+             PreparedStatement ps = conn.prepareStatement(
+                     "INSERT INTO LiquidityProjections (id, calculation_date, projected_balance, projection_date, created_at, updated_at, account_id) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+
+            ps.setObject(1, entity.getId());
+            ps.setTimestamp(2, Timestamp.valueOf(entity.getCalculationDate()));
+            ps.setBigDecimal(3, entity.getProjectedBalance());
+            ps.setDate(4, Date.valueOf(entity.getProjectionDate()));
+            ps.setTimestamp(5, Timestamp.valueOf(entity.getCreatedAt()));
+            ps.setTimestamp(6, Timestamp.valueOf(entity.getUpdatedAt()));
+            ps.setObject(7, entity.getAccount().getId());
+
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            entity = null;
+        }
+        return entity;
     }
 
     @Override
     public boolean existsById(UUID id) {
-        return liquidityProjectionJpaRepository.existsById(id);
+        boolean exists = false;
+        try (Connection conn = conexion.obtenerConexion();
+             PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM LiquidityProjections WHERE id = ?")) {
+
+            ps.setObject(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                exists = rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return exists;
     }
 
     @Override
     public void deleteById(UUID id) {
-        liquidityProjectionJpaRepository.deleteById(id);
+        try (Connection conn = conexion.obtenerConexion();
+             PreparedStatement ps = conn.prepareStatement("DELETE FROM LiquidityProjections WHERE id = ?")) {
+
+            ps.setObject(1, id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
-    public List<LiquidityProjection> findByAccountId(UUID account_id) {
-        return liquidityProjectionJpaRepository.findByAccountId(account_id);
+    public List<LiquidityProjection> findByAccountId(UUID accountId) {
+        List<LiquidityProjection> result = new ArrayList<>();
+        try (Connection conn = conexion.obtenerConexion();
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM LiquidityProjections WHERE account_id = ?")) {
+
+            ps.setObject(1, accountId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                result.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    // Método auxiliar para mapear ResultSet a entidad
+    private LiquidityProjection mapRow(ResultSet rs) throws SQLException {
+        LiquidityProjection lp = new LiquidityProjection();
+        lp.setId(rs.getObject("id", UUID.class));
+        lp.setCalculationDate(rs.getTimestamp("calculation_date").toLocalDateTime());
+        lp.setProjectedBalance(rs.getBigDecimal("projected_balance"));
+        lp.setProjectionDate(rs.getDate("projection_date").toLocalDate());
+        lp.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+        lp.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+
+        Account account = new Account();
+        account.setId(rs.getObject("account_id", UUID.class));
+        lp.setAccount(account);
+
+        return lp;
     }
 }

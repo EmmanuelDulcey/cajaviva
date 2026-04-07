@@ -6,9 +6,9 @@ spring:
   application:
     name: CajaViva
   datasource:
-    url: ${DB_URL:jdbc:sqlserver://localhost:1433;databaseName=CajaViva;encrypt=true;trustServerCertificate=true}
-    username: ${DB_USER:sa}
-    password: ${DB_PASSWORD:admin}
+    url: jdbc:sqlserver://localhost:1433;databaseName=CajaViva;encrypt=true;trustServerCertificate=true
+    username: sa
+    password: admin
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
   jpa:
     show-sql: true

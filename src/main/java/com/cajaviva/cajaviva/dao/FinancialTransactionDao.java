@@ -8,4 +8,6 @@ import java.util.UUID;
 public interface FinancialTransactionDao extends BaseDao<FinancialTransaction, UUID> {
 
     List<FinancialTransaction> findByAccountId(UUID account_id);
+
+    List<FinancialTransaction> findByCategoryId(UUID categoryId);
 }

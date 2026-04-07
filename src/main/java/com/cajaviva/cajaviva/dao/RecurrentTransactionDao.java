@@ -8,4 +8,6 @@ import java.util.UUID;
 public interface RecurrentTransactionDao extends BaseDao<RecurrentTransaction, UUID> {
 
     List<RecurrentTransaction> findByAccountId(UUID account_id);
+
+    List<RecurrentTransaction> findByCategoryId(UUID categoryId);
 }
