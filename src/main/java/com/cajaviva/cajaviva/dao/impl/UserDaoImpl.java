@@ -6,9 +6,7 @@ import com.cajaviva.cajaviva.utilities.Conexion;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.UUID;
 
 @Repository
@@ -22,138 +20,195 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public List<User> findAll() {
-        List<User> result = new ArrayList<>();
-        try (Connection connection = conexion.obtenerConexion();
-             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM Users");
-             ResultSet resultSet = preparedStatement.executeQuery()) {
+        List<User> list = new ArrayList<>();
 
-            while (resultSet.next()) {
-                User user = new User();
-                user.setId(resultSet.getObject("id", UUID.class));
-                user.setName(resultSet.getString("name"));
-                user.setLastName(resultSet.getString("last_name"));
-                user.setEmail(resultSet.getString("email"));
-                user.setActive(resultSet.getBoolean("active"));
-                user.setPasswordDigest(resultSet.getString("password_digest"));
-                user.setCreatedAt(resultSet.getTimestamp("created_at").toLocalDateTime());
-                user.setUpdatedAt(resultSet.getTimestamp("updated_at").toLocalDateTime());
-                result.add(user);
+        String sql = "SELECT * FROM Users";
+
+        try (Connection conn = conexion.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                list.add(map(rs));
             }
 
-        } catch (SQLException exception) {
-            exception.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        return result;
+
+        return list;
     }
 
     @Override
     public Optional<User> findById(UUID id) {
-        User user = null;
-        try (Connection connection = conexion.obtenerConexion();
-             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM Users WHERE id = ?")) {
 
-            preparedStatement.setObject(1, id);
-            ResultSet resultSet = preparedStatement.executeQuery();
+        String sql = "SELECT * FROM Users WHERE id = ?";
 
-            if (resultSet.next()) {
-                user = new User();
-                user.setId(resultSet.getObject("id", UUID.class));
-                user.setName(resultSet.getString("name"));
-                user.setLastName(resultSet.getString("last_name"));
-                user.setEmail(resultSet.getString("email"));
-                user.setActive(resultSet.getBoolean("active"));
-                user.setPasswordDigest(resultSet.getString("password_digest"));
-                user.setCreatedAt(resultSet.getTimestamp("created_at").toLocalDateTime());
-                user.setUpdatedAt(resultSet.getTimestamp("updated_at").toLocalDateTime());
+        try (Connection conn = conexion.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setObject(1, id);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return Optional.of(map(rs));
             }
 
-        } catch (SQLException exception) {
-            exception.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        return Optional.ofNullable(user);
+
+        return Optional.empty();
     }
 
     @Override
-    public User save(User entity) {
-        try (Connection connection = conexion.obtenerConexion();
-             PreparedStatement preparedStatement = connection.prepareStatement(
-                     "INSERT INTO Users (id, name, last_name, email, active, password_digest, created_at, updated_at) " +
-                             "VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
-
-            preparedStatement.setObject(1, entity.getId());
-            preparedStatement.setString(2, entity.getName());
-            preparedStatement.setString(3, entity.getLastName());
-            preparedStatement.setString(4, entity.getEmail());
-            preparedStatement.setBoolean(5, entity.getActive());
-            preparedStatement.setString(6, entity.getPasswordDigest());
-            preparedStatement.setTimestamp(7, Timestamp.valueOf(entity.getCreatedAt()));
-            preparedStatement.setTimestamp(8, Timestamp.valueOf(entity.getUpdatedAt()));
-
-            preparedStatement.executeUpdate();
-
-        } catch (SQLException exception) {
-            exception.printStackTrace();
-            entity = null;
+    public User save(User user) {
+        if (user.getId() == null) {
+            return insert(user);
+        } else {
+            return update(user);
         }
-        return entity;
     }
 
     @Override
     public boolean existsById(UUID id) {
-        boolean exists = false;
-        try (Connection connection = conexion.obtenerConexion();
-             PreparedStatement preparedStatement = connection.prepareStatement("SELECT COUNT(*) FROM Users WHERE id = ?")) {
 
-            preparedStatement.setObject(1, id);
-            ResultSet resultSet = preparedStatement.executeQuery();
+        String sql = "SELECT COUNT(*) FROM Users WHERE id = ?";
 
-            if (resultSet.next()) {
-                exists = resultSet.getInt(1) > 0;
+        try (Connection conn = conexion.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setObject(1, id);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
             }
 
-        } catch (SQLException exception) {
-            exception.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        return exists;
+
+        return false;
     }
 
     @Override
     public void deleteById(UUID id) {
-        try (Connection connection = conexion.obtenerConexion();
-             PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM Users WHERE id = ?")) {
 
-            preparedStatement.setObject(1, id);
-            preparedStatement.executeUpdate();
+        String sql = "DELETE FROM Users WHERE id = ?";
 
-        } catch (SQLException exception) {
-            exception.printStackTrace();
+        try (Connection conn = conexion.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setObject(1, id);
+            stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
     @Override
     public Optional<User> findByEmail(String email) {
-        User user = null;
-        try (Connection connection = conexion.obtenerConexion();
-             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM Users WHERE email = ?")) {
 
-            preparedStatement.setString(1, email);
-            ResultSet resultSet = preparedStatement.executeQuery();
+        String sql = "SELECT * FROM Users WHERE email = ?";
 
-            if (resultSet.next()) {
-                user = new User();
-                user.setId(resultSet.getObject("id", UUID.class));
-                user.setName(resultSet.getString("name"));
-                user.setLastName(resultSet.getString("last_name"));
-                user.setEmail(resultSet.getString("email"));
-                user.setActive(resultSet.getBoolean("active"));
-                user.setPasswordDigest(resultSet.getString("password_digest"));
-                user.setCreatedAt(resultSet.getTimestamp("created_at").toLocalDateTime());
-                user.setUpdatedAt(resultSet.getTimestamp("updated_at").toLocalDateTime());
+        try (Connection conn = conexion.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, email);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return Optional.of(map(rs));
             }
 
-        } catch (SQLException exception) {
-            exception.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        return Optional.ofNullable(user);
+
+        return Optional.empty();
+    }
+
+    // ======================
+    // MÉTODOS PRIVADOS
+    // ======================
+
+    private User insert(User user) {
+
+        user.setId(UUID.randomUUID());
+
+        String sql = "INSERT INTO Users (id, name, last_name, email, active, password_digest, created_at, updated_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = conexion.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setObject(1, user.getId());
+            stmt.setString(2, user.getName());
+            stmt.setString(3, user.getLastName());
+            stmt.setString(4, user.getEmail());
+            stmt.setBoolean(5, user.getActive());
+            stmt.setString(6, user.getPasswordDigest());
+            stmt.setTimestamp(7, Timestamp.valueOf(user.getCreatedAt()));
+            stmt.setTimestamp(8, Timestamp.valueOf(user.getUpdatedAt()));
+
+            stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error inserting user", e);
+        }
+
+        return user;
+    }
+
+    private User update(User user) {
+
+        String sql = "UPDATE Users SET name=?, last_name=?, email=?, active=?, password_digest=?, updated_at=? WHERE id=?";
+
+        try (Connection conn = conexion.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, user.getName());
+            stmt.setString(2, user.getLastName());
+            stmt.setString(3, user.getEmail());
+            stmt.setBoolean(4, user.getActive());
+            stmt.setString(5, user.getPasswordDigest());
+            stmt.setTimestamp(6, Timestamp.valueOf(user.getUpdatedAt()));
+            stmt.setObject(7, user.getId());
+
+            stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error updating user", e);
+        }
+
+        return user;
+    }
+
+    private User map(ResultSet rs) throws SQLException {
+
+        User u = new User();
+
+        u.setId(rs.getObject("id", UUID.class));
+        u.setName(rs.getString("name"));
+        u.setLastName(rs.getString("last_name"));
+        u.setEmail(rs.getString("email"));
+        u.setActive(rs.getBoolean("active"));
+        u.setPasswordDigest(rs.getString("password_digest"));
+
+        Timestamp created = rs.getTimestamp("created_at");
+        if (created != null) {
+            u.setCreatedAt(created.toLocalDateTime());
+        }
+
+        Timestamp updated = rs.getTimestamp("updated_at");
+        if (updated != null) {
+            u.setUpdatedAt(updated.toLocalDateTime());
+        }
+
+        return u;
     }
 }

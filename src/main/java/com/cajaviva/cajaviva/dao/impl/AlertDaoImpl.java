@@ -67,7 +67,7 @@ public class AlertDaoImpl implements AlertDao {
             ps.setInt(5, entity.getStatus());
             ps.setTimestamp(6, Timestamp.valueOf(entity.getCreatedAt()));
             ps.setTimestamp(7, Timestamp.valueOf(entity.getUpdatedAt()));
-            ps.setObject(8, entity.getLiquidityProjection().getId());
+            ps.setObject(8, entity.getLiquidityProjectionId());
 
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -168,9 +168,7 @@ public class AlertDaoImpl implements AlertDao {
         alert.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
         alert.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
 
-        LiquidityProjection lp = new LiquidityProjection();
-        lp.setId(rs.getObject("liquidity_projection_id", UUID.class));
-        alert.setLiquidityProjection(lp);
+        alert.setId(rs.getObject("id", UUID.class));
 
         return alert;
     }

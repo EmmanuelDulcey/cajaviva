@@ -66,7 +66,7 @@ public class AccountDaoImpl implements AccountDao {
             ps.setBigDecimal(4, entity.getBalance());
             ps.setTimestamp(5, Timestamp.valueOf(entity.getCreatedAt()));
             ps.setTimestamp(6, Timestamp.valueOf(entity.getUpdatedAt()));
-            ps.setObject(7, entity.getUser().getId());
+            ps.setObject(7, entity.getUserId());
 
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -149,9 +149,7 @@ public class AccountDaoImpl implements AccountDao {
         account.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
         account.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
 
-        User user = new User();
-        user.setId(rs.getObject("user_id", UUID.class));
-        account.setUser(user);
+        account.setUserId(rs.getObject("user_id", UUID.class));
 
         return account;
     }

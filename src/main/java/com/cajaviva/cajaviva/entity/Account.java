@@ -1,60 +1,22 @@
 package com.cajaviva.cajaviva.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
-import jakarta.validation.constraints.Size;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity
-@Table(name = "Accounts")
 public class Account {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
-
-    @NotBlank
-    @Size(max = 150)
-    @Column(name = "name", nullable = false, length = 150)
     private String name;
-
-    @NotNull
-    @Column(name = "account_type", nullable = false)
     private Integer accountType;
-
-    @NotNull
-    @PositiveOrZero
-    @Column(name = "balance", nullable = false, precision = 19, scale = 4)
     private BigDecimal balance;
-
-    @NotNull
-    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-
-    @NotNull
-    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @NotNull
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    // 🔥 RELACIÓN MANUAL (JDBC)
+    private UUID userId;
 
-    public Account() {
-    }
+    public Account() {}
 
     public UUID getId() {
         return id;
@@ -104,11 +66,11 @@ public class Account {
         this.updatedAt = updatedAt;
     }
 
-    public User getUser() {
-        return user;
+    public UUID getUserId() {
+        return userId;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setUserId(UUID userId) {
+        this.userId = userId;
     }
 }

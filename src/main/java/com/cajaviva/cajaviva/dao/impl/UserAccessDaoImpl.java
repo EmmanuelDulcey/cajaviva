@@ -1,8 +1,6 @@
 package com.cajaviva.cajaviva.dao.impl;
 
 import com.cajaviva.cajaviva.dao.UserAccessDao;
-import com.cajaviva.cajaviva.entity.Account;
-import com.cajaviva.cajaviva.entity.User;
 import com.cajaviva.cajaviva.entity.UserAccess;
 import com.cajaviva.cajaviva.utilities.Conexion;
 import org.springframework.stereotype.Repository;
@@ -25,6 +23,7 @@ public class UserAccessDaoImpl implements UserAccessDao {
     @Override
     public List<UserAccess> findAll() {
         List<UserAccess> result = new ArrayList<>();
+
         try (Connection conn = conexion.obtenerConexion();
              PreparedStatement ps = conn.prepareStatement("SELECT * FROM UserAccesses");
              ResultSet rs = ps.executeQuery()) {
@@ -36,12 +35,14 @@ public class UserAccessDaoImpl implements UserAccessDao {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return result;
     }
 
     @Override
     public Optional<UserAccess> findById(UUID id) {
         UserAccess ua = null;
+
         try (Connection conn = conexion.obtenerConexion();
              PreparedStatement ps = conn.prepareStatement("SELECT * FROM UserAccesses WHERE id = ?")) {
 
@@ -55,33 +56,24 @@ public class UserAccessDaoImpl implements UserAccessDao {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return Optional.ofNullable(ua);
     }
 
     @Override
     public UserAccess save(UserAccess entity) {
-        try (Connection conn = conexion.obtenerConexion();
-             PreparedStatement ps = conn.prepareStatement(
-                     "INSERT INTO UserAccesses (id, role, created_at, account_id, user_id) VALUES (?, ?, ?, ?, ?)")) {
 
-            ps.setObject(1, entity.getId());
-            ps.setInt(2, entity.getRole());
-            ps.setTimestamp(3, Timestamp.valueOf(entity.getCreatedAt()));
-            ps.setObject(4, entity.getAccount().getId()); // usamos el id del objeto Account
-            ps.setObject(5, entity.getUser().getId());    // usamos el id del objeto User
-
-            ps.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            entity = null;
+        if (entity.getId() == null) {
+            return insert(entity);
+        } else {
+            return update(entity);
         }
-        return entity;
     }
 
     @Override
     public boolean existsById(UUID id) {
         boolean exists = false;
+
         try (Connection conn = conexion.obtenerConexion();
              PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM UserAccesses WHERE id = ?")) {
 
@@ -95,11 +87,13 @@ public class UserAccessDaoImpl implements UserAccessDao {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return exists;
     }
 
     @Override
     public void deleteById(UUID id) {
+
         try (Connection conn = conexion.obtenerConexion();
              PreparedStatement ps = conn.prepareStatement("DELETE FROM UserAccesses WHERE id = ?")) {
 
@@ -114,6 +108,7 @@ public class UserAccessDaoImpl implements UserAccessDao {
     @Override
     public List<UserAccess> findByUserId(UUID userId) {
         List<UserAccess> result = new ArrayList<>();
+
         try (Connection conn = conexion.obtenerConexion();
              PreparedStatement ps = conn.prepareStatement("SELECT * FROM UserAccesses WHERE user_id = ?")) {
 
@@ -127,12 +122,14 @@ public class UserAccessDaoImpl implements UserAccessDao {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return result;
     }
 
     @Override
     public List<UserAccess> findByAccountId(UUID accountId) {
         List<UserAccess> result = new ArrayList<>();
+
         try (Connection conn = conexion.obtenerConexion();
              PreparedStatement ps = conn.prepareStatement("SELECT * FROM UserAccesses WHERE account_id = ?")) {
 
@@ -146,24 +143,70 @@ public class UserAccessDaoImpl implements UserAccessDao {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return result;
     }
 
-    // Método auxiliar para mapear ResultSet a entidad
+    // 🔥 INSERT
+    private UserAccess insert(UserAccess entity) {
+
+        entity.setId(UUID.randomUUID());
+
+        String sql = "INSERT INTO UserAccesses (id, role, created_at, account_id, user_id) VALUES (?, ?, ?, ?, ?)";
+
+        try (Connection conn = conexion.obtenerConexion();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setObject(1, entity.getId());
+            ps.setInt(2, entity.getRole());
+            ps.setTimestamp(3, Timestamp.valueOf(entity.getCreatedAt()));
+            ps.setObject(4, entity.getAccountId());
+            ps.setObject(5, entity.getUserId());
+
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        return entity;
+    }
+
+    // 🔥 UPDATE
+    private UserAccess update(UserAccess entity) {
+
+        String sql = "UPDATE UserAccesses SET role=?, account_id=?, user_id=? WHERE id=?";
+
+        try (Connection conn = conexion.obtenerConexion();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, entity.getRole());
+            ps.setObject(2, entity.getAccountId());
+            ps.setObject(3, entity.getUserId());
+            ps.setObject(4, entity.getId());
+
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        return entity;
+    }
+
+    // 🔥 MAPEO
     private UserAccess mapRow(ResultSet rs) throws SQLException {
+
         UserAccess ua = new UserAccess();
+
         ua.setId(rs.getObject("id", UUID.class));
         ua.setRole(rs.getInt("role"));
         ua.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
 
-        // Creamos objetos "ligeros" de Account y User solo con el id
-        Account account = new Account();
-        account.setId(rs.getObject("account_id", UUID.class));
-        ua.setAccount(account);
-
-        User user = new User();
-        user.setId(rs.getObject("user_id", UUID.class));
-        ua.setUser(user);
+        ua.setAccountId(rs.getObject("account_id", UUID.class));
+        ua.setUserId(rs.getObject("user_id", UUID.class));
 
         return ua;
     }
