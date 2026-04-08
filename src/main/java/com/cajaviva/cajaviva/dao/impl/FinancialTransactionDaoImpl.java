@@ -68,10 +68,10 @@ public class FinancialTransactionDaoImpl implements FinancialTransactionDao {
             ps.setInt(5, entity.getStatus());
             ps.setTimestamp(6, Timestamp.valueOf(entity.getCreatedAt()));
             ps.setTimestamp(7, Timestamp.valueOf(entity.getUpdatedAt()));
-            ps.setObject(8, entity.getAccount().getId());
+            ps.setObject(8, entity.getAccountId());
 
-            if (entity.getCategory() != null) {
-                ps.setObject(9, entity.getCategory().getId());
+            if (entity.getCategoryId() != null) {
+                ps.setObject(9, entity.getCategoryId());
             } else {
                 ps.setNull(9, Types.NULL);
             }
@@ -158,15 +158,13 @@ public class FinancialTransactionDaoImpl implements FinancialTransactionDao {
         ft.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
         ft.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
 
-        Account account = new Account();
-        account.setId(rs.getObject("account_id", UUID.class));
-        ft.setAccount(account);
+        ft.setId(rs.getObject("id", UUID.class));
 
         UUID categoryId = rs.getObject("category_id", UUID.class);
         if (categoryId != null) {
             Category category = new Category();
             category.setId(categoryId);
-            ft.setCategory(category);
+            ft.setCategoryId(categoryId);
         }
 
         return ft;

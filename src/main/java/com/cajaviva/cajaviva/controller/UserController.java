@@ -1,13 +1,8 @@
 package com.cajaviva.cajaviva.controller;
 
-import com.cajaviva.cajaviva.dao.UserDao;
 import com.cajaviva.cajaviva.entity.User;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.cajaviva.cajaviva.service.UserService;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -16,24 +11,24 @@ import java.util.UUID;
 @RequestMapping("/api/users")
 public class UserController {
 
-    private final UserDao userDao;
+    private final UserService userService;
 
-    public UserController(UserDao userDao) {
-        this.userDao = userDao;
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     @GetMapping
     public List<User> getAllUsers() {
-        return userDao.findAll();
+        return userService.findAll();
     }
 
     @GetMapping("/{id}")
     public User getUserById(@PathVariable UUID id) {
-        return userDao.findById(id).orElse(null);
+        return userService.findById(id).orElse(null);
     }
 
     @PostMapping
     public User createUser(@RequestBody User user) {
-        return userDao.save(user);
+        return userService.save(user);
     }
 }

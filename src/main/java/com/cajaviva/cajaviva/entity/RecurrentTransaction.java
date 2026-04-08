@@ -1,68 +1,24 @@
 package com.cajaviva.cajaviva.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity
-@Table(name = "RecurrentTransactions")
 public class RecurrentTransaction {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
-
-    @NotNull
-    @PositiveOrZero
-    @Column(name = "value", nullable = false, precision = 19, scale = 4)
     private BigDecimal value;
-
-    @NotNull
-    @Column(name = "initial_date", nullable = false)
     private LocalDate initialDate;
-
-    @Column(name = "end_date")
     private LocalDate endDate;
-
-    @NotNull
-    @Column(name = "frequency", nullable = false)
     private Integer frequency;
-
-    @Positive
-    @Column(name = "custom_frequency")
     private Integer customFrequency;
-
-    @NotNull
-    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-
-    @NotNull
-    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @NotNull
-    @ManyToOne
-    @JoinColumn(name = "account_id", nullable = false)
-    private Account account;
-
-    @NotNull
-    @ManyToOne
-    @JoinColumn(name = "category_id", nullable = false)
-    private Category category;
+    // 🔥 RELACIONES JDBC
+    private UUID accountId;
+    private UUID categoryId;
 
     public RecurrentTransaction() {
     }
@@ -131,19 +87,19 @@ public class RecurrentTransaction {
         this.updatedAt = updatedAt;
     }
 
-    public Account getAccount() {
-        return account;
+    public UUID getAccountId() {
+        return accountId;
     }
 
-    public void setAccount(Account account) {
-        this.account = account;
+    public void setAccountId(UUID accountId) {
+        this.accountId = accountId;
     }
 
-    public Category getCategory() {
-        return category;
+    public UUID getCategoryId() {
+        return categoryId;
     }
 
-    public void setCategory(Category category) {
-        this.category = category;
+    public void setCategoryId(UUID categoryId) {
+        this.categoryId = categoryId;
     }
 }
