@@ -2,11 +2,14 @@ package com.cajaviva.cajaviva.dao.impl;
 
 import com.cajaviva.cajaviva.dao.UserDao;
 import com.cajaviva.cajaviva.entity.User;
+import com.cajaviva.cajaviva.exception.ConflictException;
 import com.cajaviva.cajaviva.utilities.Conexion;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -33,7 +36,7 @@ public class UserDaoImpl implements UserDao {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Error al consultar los usuarios.", e);
         }
 
         return list;
@@ -55,7 +58,7 @@ public class UserDaoImpl implements UserDao {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Error al consultar el usuario.", e);
         }
 
         return Optional.empty();
@@ -86,7 +89,7 @@ public class UserDaoImpl implements UserDao {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Error al verificar si el usuario existe.", e);
         }
 
         return false;
@@ -104,7 +107,7 @@ public class UserDaoImpl implements UserDao {
             stmt.executeUpdate();
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Error al eliminar el usuario.", e);
         }
     }
 
@@ -124,15 +127,11 @@ public class UserDaoImpl implements UserDao {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Error al consultar el usuario por email.", e);
         }
 
         return Optional.empty();
     }
-
-    // ======================
-    // MÉTODOS PRIVADOS
-    // ======================
 
     private User insert(User user) {
 
@@ -156,8 +155,10 @@ public class UserDaoImpl implements UserDao {
             stmt.executeUpdate();
 
         } catch (SQLException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Error inserting user", e);
+            if (isDuplicateEmail(e)) {
+                throw new ConflictException("Este email ya se encuentra registrado.");
+            }
+            throw new RuntimeException("Error al crear el usuario.", e);
         }
 
         return user;
@@ -181,8 +182,10 @@ public class UserDaoImpl implements UserDao {
             stmt.executeUpdate();
 
         } catch (SQLException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Error updating user", e);
+            if (isDuplicateEmail(e)) {
+                throw new ConflictException("Este email ya se encuentra registrado.");
+            }
+            throw new RuntimeException("Error al actualizar el usuario.", e);
         }
 
         return user;
@@ -210,5 +213,9 @@ public class UserDaoImpl implements UserDao {
         }
 
         return u;
+    }
+
+    private boolean isDuplicateEmail(SQLException exception) {
+        return exception.getErrorCode() == 2627 || exception.getErrorCode() == 2601;
     }
 }
