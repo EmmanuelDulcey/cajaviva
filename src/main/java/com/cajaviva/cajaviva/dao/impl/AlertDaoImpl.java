@@ -1,7 +1,9 @@
 package com.cajaviva.cajaviva.dao.impl;
 
 import com.cajaviva.cajaviva.dao.AlertDao;
+import com.cajaviva.cajaviva.entity.Account;
 import com.cajaviva.cajaviva.entity.Alert;
+import com.cajaviva.cajaviva.entity.FinancialTransaction;
 import com.cajaviva.cajaviva.entity.LiquidityProjection;
 import com.cajaviva.cajaviva.utilities.Conexion;
 import org.springframework.stereotype.Repository;
@@ -26,7 +28,7 @@ public class AlertDaoImpl implements AlertDao {
         List<Alert> result = new ArrayList<>();
         try (Connection conn = conexion.obtenerConexion();
              PreparedStatement ps = conn.prepareStatement("SELECT * FROM Alerts");
-             ResultSet rs = ps.executeQuery()) {
+            ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 result.add(mapRow(rs));
@@ -57,8 +59,8 @@ public class AlertDaoImpl implements AlertDao {
     @Override
     public Alert save(Alert entity) {
         try (Connection conn = conexion.obtenerConexion();
-             PreparedStatement ps = conn.prepareStatement(
-                     "INSERT INTO Alerts (id, type, message, date, status, created_at, updated_at, liquidity_projection_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
+            PreparedStatement ps = conn.prepareStatement(
+                    "INSERT INTO Alerts (id, type, message, date, status, created_at, updated_at, liquidity_projection_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
 
             ps.setObject(1, entity.getId());
             ps.setInt(2, entity.getType());
@@ -67,7 +69,7 @@ public class AlertDaoImpl implements AlertDao {
             ps.setInt(5, entity.getStatus());
             ps.setTimestamp(6, Timestamp.valueOf(entity.getCreatedAt()));
             ps.setTimestamp(7, Timestamp.valueOf(entity.getUpdatedAt()));
-            ps.setObject(8, entity.getLiquidityProjectionId());
+            ps.setObject(8, entity.getLiquidityProjection());
 
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -81,7 +83,7 @@ public class AlertDaoImpl implements AlertDao {
     public boolean existsById(UUID id) {
         boolean exists = false;
         try (Connection conn = conexion.obtenerConexion();
-             PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM Alerts WHERE id = ?")) {
+            PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM Alerts WHERE id = ?")) {
 
             ps.setObject(1, id);
             ResultSet rs = ps.executeQuery();
@@ -97,7 +99,7 @@ public class AlertDaoImpl implements AlertDao {
     @Override
     public void deleteById(UUID id) {
         try (Connection conn = conexion.obtenerConexion();
-             PreparedStatement ps = conn.prepareStatement("DELETE FROM Alerts WHERE id = ?")) {
+            PreparedStatement ps = conn.prepareStatement("DELETE FROM Alerts WHERE id = ?")) {
 
             ps.setObject(1, id);
             ps.executeUpdate();
@@ -171,5 +173,10 @@ public class AlertDaoImpl implements AlertDao {
         alert.setId(rs.getObject("id", UUID.class));
 
         return alert;
+    }
+
+    @Override
+    public List<FinancialTransaction> findByAccount(Account account) {
+        throw new UnsupportedOperationException("Unimplemented method 'findByAccount'");
     }
 }

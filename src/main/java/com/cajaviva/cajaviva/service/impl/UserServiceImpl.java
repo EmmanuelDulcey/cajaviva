@@ -28,7 +28,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User findById(UUID id) {
-        return getExistingUser(id);
+        return userDao.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontró el usuario con id: " + id));
     }
 
     @Override
@@ -47,35 +48,29 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User update(UUID id, User user) {
-        User existingUser = getExistingUser(id);
+        User existingUser = findById(id);
         validateUserPayload(user, false);
 
         String emailToPersist = isBlank(user.getEmail()) ? existingUser.getEmail() : user.getEmail();
         validateEmailAvailability(emailToPersist, id);
 
-        user.setId(id);
-        user.setName(isBlank(user.getName()) ? existingUser.getName() : user.getName());
-        user.setLastName(isBlank(user.getLastName()) ? existingUser.getLastName() : user.getLastName());
-        user.setEmail(emailToPersist);
-        user.setCreatedAt(existingUser.getCreatedAt());
-        user.setActive(user.getActive() != null ? user.getActive() : existingUser.getActive());
-        user.setPasswordDigest(isBlank(user.getPasswordDigest()) ? existingUser.getPasswordDigest() : user.getPasswordDigest());
-        user.setUpdatedAt(LocalDateTime.now());
+        existingUser.setName(isBlank(user.getName()) ? existingUser.getName() : user.getName());
+        existingUser.setLastName(isBlank(user.getLastName()) ? existingUser.getLastName() : user.getLastName());
+        existingUser.setEmail(emailToPersist);
+        existingUser.setActive(user.getActive() != null ? user.getActive() : existingUser.getActive());
+        existingUser.setPasswordDigest(isBlank(user.getPasswordDigest()) ? existingUser.getPasswordDigest() : user.getPasswordDigest());
+        existingUser.setUpdatedAt(LocalDateTime.now());
 
-        return userDao.save(user);
+        return userDao.save(existingUser);
     }
 
     @Override
     public void delete(UUID id) {
-        getExistingUser(id);
+        findById(id);
         userDao.deleteById(id);
     }
 
-    private User getExistingUser(UUID id) {
-        return userDao.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el usuario solicitado."));
-    }
-
+    // 🔎 Validaciones de negocio
     private void validateEmailAvailability(String email, UUID currentUserId) {
         userDao.findByEmail(email)
                 .filter(existingUser -> !existingUser.getId().equals(currentUserId))
@@ -102,7 +97,7 @@ public class UserServiceImpl implements UserService {
         }
 
         if (requirePasswordDigest && isBlank(user.getPasswordDigest())) {
-            throw new BusinessValidationException("La contrasena del usuario es obligatoria.");
+            throw new BusinessValidationException("La contraseña del usuario es obligatoria.");
         }
     }
 
