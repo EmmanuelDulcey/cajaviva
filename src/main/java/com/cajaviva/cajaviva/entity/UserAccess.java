@@ -9,7 +9,7 @@ public class UserAccess {
     private Integer role;
     private LocalDateTime createdAt;
 
-    // 🔥 SOLO IDs (NO objetos)
+    //SOLO IDs 
     private UUID accountId;
     private UUID userId;
 
