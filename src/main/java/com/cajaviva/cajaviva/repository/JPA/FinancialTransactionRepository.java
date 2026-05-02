@@ -1,4 +1,4 @@
-package com.cajaviva.cajaviva.repository;
+package com.cajaviva.cajaviva.repository.JPA;
 
 import com.cajaviva.cajaviva.entity.FinancialTransaction;
 import com.cajaviva.cajaviva.entity.Account;

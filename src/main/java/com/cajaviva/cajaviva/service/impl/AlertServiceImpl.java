@@ -1,19 +1,21 @@
 package com.cajaviva.cajaviva.service.impl;
 
 import com.cajaviva.cajaviva.entity.Alert;
-import com.cajaviva.cajaviva.repository.AlertRepository;
+import com.cajaviva.cajaviva.repository.JPA.AlertRepository;
 import com.cajaviva.cajaviva.service.AlertService;
+
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
-@Service
+@Service 
 public class AlertServiceImpl implements AlertService {
 
     private final AlertRepository alertRepository;
 
-    public AlertServiceImpl(AlertRepository alertRepository) {
+    public AlertServiceImpl(@Qualifier ("AlertJPAImpl") AlertRepository alertRepository) {
         this.alertRepository = alertRepository;
     }
 
@@ -49,5 +51,11 @@ public class AlertServiceImpl implements AlertService {
     @Override
     public void delete(UUID id) {
         alertRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Alert> findByLiquidityProjectionId(UUID projection_id) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'findByLiquidityProjectionId'");
     }
 }

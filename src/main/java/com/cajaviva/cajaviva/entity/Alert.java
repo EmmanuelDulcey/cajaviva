@@ -11,7 +11,7 @@ public class Alert {
 
     @Id
     @GeneratedValue
-    @Column(name = "alert_id", columnDefinition = "uniqueidentifier")
+    @Column(name = "alert_id", columnDefinition = "UUID", updatable = false, nullable = false)
     private UUID id;
 
     @Column(name = "type", nullable = false)
@@ -63,4 +63,9 @@ public class Alert {
 
     public LiquidityProjection getLiquidityProjection() { return liquidityProjection; }
     public void setLiquidityProjection(LiquidityProjection liquidityProjection) { this.liquidityProjection = liquidityProjection; }
+
+    public Object getLiquidityProjectionId() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getLiquidityProjectionId'");
+    }
 }

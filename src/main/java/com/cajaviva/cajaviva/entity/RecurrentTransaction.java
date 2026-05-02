@@ -94,4 +94,24 @@ public class RecurrentTransaction {
     public void setStatus(Object status) {
         throw new UnsupportedOperationException("Unimplemented method 'setStatus'");
     }
+
+    public void setAccountId(UUID object) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setAccountId'");
+    }
+
+    public void setCategoryId(UUID object) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setCategoryId'");
+    }
+
+    public Object getAccountId() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getAccountId'");
+    }
+
+    public Object getCategoryId() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getCategoryId'");
+    }
 }

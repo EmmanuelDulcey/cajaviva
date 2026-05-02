@@ -10,4 +10,5 @@ public interface AlertService {
     Alert create(Alert alert);
     Alert update(UUID id, Alert alert);
     void delete(UUID id);
+    List<Alert> findByLiquidityProjectionId(UUID projection_id);
 }

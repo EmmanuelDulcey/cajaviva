@@ -1,20 +1,15 @@
-package com.cajaviva.cajaviva.repository;
+package com.cajaviva.cajaviva.repository.JPA;
 
 import com.cajaviva.cajaviva.entity.Alert;
-import com.cajaviva.cajaviva.entity.LiquidityProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.UUID;
 
+@Repository("AlertJPAImpl")   // 👈 este nombre debe coincidir con el @Qualifier
 public interface AlertRepository extends JpaRepository<Alert, UUID> {
-
-    // Buscar alertas por estado
     List<Alert> findByStatus(Integer status);
-
-    // Buscar alertas por tipo
     List<Alert> findByType(Integer type);
-
-    // Buscar alertas por LiquidityProjection
-    List<Alert> findByLiquidityProjection(LiquidityProjection liquidityProjection);
+    List<Alert> findByLiquidityProjectionId(UUID liquidityProjectionId);
 }
