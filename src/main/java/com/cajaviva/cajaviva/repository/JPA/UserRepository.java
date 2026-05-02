@@ -1,4 +1,4 @@
-package com.cajaviva.cajaviva.repository;
+package com.cajaviva.cajaviva.repository.JPA;
 
 import com.cajaviva.cajaviva.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,6 +10,5 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     Optional<User> findByEmail(String email);
 
-    // Puedes agregar más métodos de consulta
-    // tener en cuenta la base de datos en esta 
+
 }

@@ -1,6 +1,6 @@
 package com.cajaviva.cajaviva.controller;
 
-import com.cajaviva.cajaviva.dao.RecurrentTransactionDao;
+import com.cajaviva.cajaviva.service.RecurrentTransactionService;
 import com.cajaviva.cajaviva.entity.RecurrentTransaction;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,24 +11,24 @@ import java.util.UUID;
 @RequestMapping("/api/recurrent-transactions")
 public class RecurrentTransactionController {
 
-    private final RecurrentTransactionDao recurrentTransactionDao;
+    private final RecurrentTransactionService recurrentTransactionService;
 
-    public RecurrentTransactionController(RecurrentTransactionDao recurrentTransactionDao) {
-        this.recurrentTransactionDao = recurrentTransactionDao;
+    public RecurrentTransactionController(RecurrentTransactionService recurrentTransactionService) {
+        this.recurrentTransactionService = recurrentTransactionService;
     }
 
     @GetMapping
     public List<RecurrentTransaction> getAllRecurrentTransactions() {
-        return recurrentTransactionDao.findAll();
+        return recurrentTransactionService.findAll();
     }
 
     @GetMapping("/account/{account_id}")
     public List<RecurrentTransaction> getByAccount(@PathVariable("account_id") UUID account_id) {
-        return recurrentTransactionDao.findByAccountId(account_id);
+        return recurrentTransactionService.findByAccountId(account_id);
     }
 
     @PostMapping
     public RecurrentTransaction createRecurrentTransaction(@RequestBody RecurrentTransaction recurrentTransaction) {
-        return recurrentTransactionDao.save(recurrentTransaction);
+        return recurrentTransactionService.create(recurrentTransaction);
     }
 }

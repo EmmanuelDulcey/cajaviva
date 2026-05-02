@@ -1,9 +1,11 @@
 package com.cajaviva.cajaviva.service.impl;
 
 import com.cajaviva.cajaviva.entity.LiquidityProjection;
+import com.cajaviva.cajaviva.repository.JPA.LiquidityProjectionRepository;
 import com.cajaviva.cajaviva.entity.Account;
-import com.cajaviva.cajaviva.repository.LiquidityProjectionRepository;
 import com.cajaviva.cajaviva.service.LiquidityProjectionService;
+
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -15,7 +17,7 @@ public class LiquidityProjectionServiceImpl implements LiquidityProjectionServic
 
     private final LiquidityProjectionRepository liquidityProjectionRepository;
 
-    public LiquidityProjectionServiceImpl(LiquidityProjectionRepository liquidityProjectionRepository) {
+    public LiquidityProjectionServiceImpl(@Qualifier("LiquidityProjectionJPAIpml") LiquidityProjectionRepository liquidityProjectionRepository) {
         this.liquidityProjectionRepository = liquidityProjectionRepository;
     }
 
@@ -59,5 +61,11 @@ public class LiquidityProjectionServiceImpl implements LiquidityProjectionServic
     @Override
     public List<LiquidityProjection> findByProjectionDate(LocalDate projectionDate) {
         return liquidityProjectionRepository.findByProjectionDate(projectionDate);
+    }
+
+    @Override
+    public List<LiquidityProjection> findByAccountId(UUID account_id) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'findByAccountId'");
     }
 }

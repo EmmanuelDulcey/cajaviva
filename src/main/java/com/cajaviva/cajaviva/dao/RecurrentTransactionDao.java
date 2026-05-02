@@ -14,4 +14,5 @@ public interface RecurrentTransactionDao extends BaseDao<RecurrentTransaction, U
     List<RecurrentTransaction> findByStatus(Integer status);
     List<RecurrentTransaction> findByAccountId(UUID account_id);
     List<RecurrentTransaction> findByAccount(Account account);
+    List<RecurrentTransaction> findByCategoryId(UUID categoryId);
 }

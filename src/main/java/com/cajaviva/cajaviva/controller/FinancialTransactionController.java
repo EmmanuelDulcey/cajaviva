@@ -1,6 +1,6 @@
 package com.cajaviva.cajaviva.controller;
 
-import com.cajaviva.cajaviva.dao.FinancialTransactionDao;
+import com.cajaviva.cajaviva.service.FinancialTransactionService;
 import com.cajaviva.cajaviva.entity.FinancialTransaction;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,24 +11,24 @@ import java.util.UUID;
 @RequestMapping("/api/transactions")
 public class FinancialTransactionController {
 
-    private final FinancialTransactionDao financialTransactionDao;
+    private final FinancialTransactionService financialTransactionService;
 
-    public FinancialTransactionController(FinancialTransactionDao financialTransactionDao) {
-        this.financialTransactionDao = financialTransactionDao;
+    public FinancialTransactionController(FinancialTransactionService financialTransactionService) {
+        this.financialTransactionService = financialTransactionService;
     }
 
     @GetMapping
     public List<FinancialTransaction> getAllTransactions() {
-        return financialTransactionDao.findAll();
+        return financialTransactionService.findAll();
     }
 
     @GetMapping("/account/{account_id}")
     public List<FinancialTransaction> getTransactionsByAccount(@PathVariable("account_id") UUID account_id) {
-        return financialTransactionDao.findByAccountId(account_id);
+        return financialTransactionService.findByAccountId(account_id);
     }
 
     @PostMapping
     public FinancialTransaction createTransaction(@RequestBody FinancialTransaction transaction) {
-        return financialTransactionDao.save(transaction);
+        return financialTransactionService.create(transaction);
     }
 }

@@ -16,4 +16,5 @@ public interface LiquidityProjectionService {
 
     List<LiquidityProjection> findByAccount(Account account);
     List<LiquidityProjection> findByProjectionDate(LocalDate projectionDate);
+    List<LiquidityProjection> findByAccountId(UUID account_id);
 }

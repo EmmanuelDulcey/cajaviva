@@ -42,6 +42,10 @@ public class User {
 
     }
 
+    public User() {
+        //TODO Auto-generated constructor stub
+    }
+
     // getters y setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }

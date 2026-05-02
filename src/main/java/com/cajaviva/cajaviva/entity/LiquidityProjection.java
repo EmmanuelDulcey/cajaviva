@@ -12,7 +12,7 @@ public class LiquidityProjection {
 
     @Id
     @GeneratedValue
-    @Column(name = "projection_id", columnDefinition = "uniqueidentifier")
+    @Column(name = "projection_id", columnDefinition = "UUID", updatable = false, nullable = false)
     private UUID id;
 
     @Column(name = "calculation_date", nullable = false)
@@ -30,7 +30,7 @@ public class LiquidityProjection {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // 🔥 Relación con Account
+    //  Relación con Account
     @ManyToOne
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
@@ -65,5 +65,15 @@ public class LiquidityProjection {
 
     public void setAmount(Object amount) {
         throw new UnsupportedOperationException("Unimplemented method 'setAmount'");
+    }
+
+    public Object getAccountId() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getAccountId'");
+    }
+
+    public void setAccountId(UUID object) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setAccountId'");
     }
 }

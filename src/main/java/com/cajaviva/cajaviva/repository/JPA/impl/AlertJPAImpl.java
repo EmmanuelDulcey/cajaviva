@@ -1,4 +1,4 @@
-package com.cajaviva.cajaviva.dao.impl;
+package com.cajaviva.cajaviva.repository.JPA.impl;
 
 import com.cajaviva.cajaviva.dao.AlertDao;
 import com.cajaviva.cajaviva.entity.Account;
@@ -15,12 +15,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Repository("AlertDaoJDBC")
-public class AlertDaoImpl implements AlertDao {
+@Repository ("AlertJPAIpml")
+public class AlertJPAImpl implements AlertDao {
 
     private final Conexion conexion;
 
-    public AlertDaoImpl(Conexion conexion) {
+    public AlertJPAImpl(Conexion conexion) {
         this.conexion = conexion;
     }
 
@@ -29,7 +29,7 @@ public class AlertDaoImpl implements AlertDao {
         List<Alert> result = new ArrayList<>();
         try (Connection conn = conexion.obtenerConexion();
              PreparedStatement ps = conn.prepareStatement("SELECT * FROM Alerts");
-             ResultSet rs = ps.executeQuery()) {
+            ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 result.add(mapRow(rs));
@@ -60,8 +60,8 @@ public class AlertDaoImpl implements AlertDao {
     @Override
     public Alert save(Alert entity) {
         try (Connection conn = conexion.obtenerConexion();
-             PreparedStatement ps = conn.prepareStatement(
-                     "INSERT INTO Alerts (id, type, message, date, status, created_at, updated_at, liquidity_projection_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
+            PreparedStatement ps = conn.prepareStatement(
+                    "INSERT INTO Alerts (id, type, message, date, status, created_at, updated_at, liquidity_projection_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
 
             ps.setObject(1, entity.getId());
             ps.setInt(2, entity.getType());
@@ -70,7 +70,7 @@ public class AlertDaoImpl implements AlertDao {
             ps.setInt(5, entity.getStatus());
             ps.setTimestamp(6, Timestamp.valueOf(entity.getCreatedAt()));
             ps.setTimestamp(7, Timestamp.valueOf(entity.getUpdatedAt()));
-            ps.setObject(8, entity.getLiquidityProjection().getId());
+            ps.setObject(8, entity.getLiquidityProjection());
 
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -84,7 +84,7 @@ public class AlertDaoImpl implements AlertDao {
     public boolean existsById(UUID id) {
         boolean exists = false;
         try (Connection conn = conexion.obtenerConexion();
-             PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM Alerts WHERE id = ?")) {
+            PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM Alerts WHERE id = ?")) {
 
             ps.setObject(1, id);
             ResultSet rs = ps.executeQuery();
@@ -100,13 +100,30 @@ public class AlertDaoImpl implements AlertDao {
     @Override
     public void deleteById(UUID id) {
         try (Connection conn = conexion.obtenerConexion();
-             PreparedStatement ps = conn.prepareStatement("DELETE FROM Alerts WHERE id = ?")) {
+            PreparedStatement ps = conn.prepareStatement("DELETE FROM Alerts WHERE id = ?")) {
 
             ps.setObject(1, id);
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public List<Alert> findByStatus(Integer status) {
+        List<Alert> result = new ArrayList<>();
+        try (Connection conn = conexion.obtenerConexion();
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM Alerts WHERE status = ?")) {
+
+            ps.setInt(1, status);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                result.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 
     @Override
@@ -143,45 +160,6 @@ public class AlertDaoImpl implements AlertDao {
         return result;
     }
 
-    @Override
-    public List<Alert> findByStatus(Integer status) {
-        List<Alert> result = new ArrayList<>();
-        try (Connection conn = conexion.obtenerConexion();
-             PreparedStatement ps = conn.prepareStatement("SELECT * FROM Alerts WHERE status = ?")) {
-
-            ps.setInt(1, status);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                result.add(mapRow(rs));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return result;
-    }
-
-    @Override
-    public List<FinancialTransaction> findByAccount(Account account) {
-        List<FinancialTransaction> result = new ArrayList<>();
-        try (Connection conn = conexion.obtenerConexion();
-             PreparedStatement ps = conn.prepareStatement("SELECT * FROM FinancialTransactions WHERE account_id = ?")) {
-
-            ps.setObject(1, account.getId());
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                FinancialTransaction ft = new FinancialTransaction();
-                ft.setId(rs.getObject("id", UUID.class));
-                ft.setAmount(rs.getBigDecimal("amount"));
-                ft.setDate(rs.getTimestamp("date").toLocalDateTime());
-                ft.setStatus(rs.getInt("status"));
-                result.add(ft);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return result;
-    }
-
     // Método auxiliar para mapear ResultSet a entidad
     private Alert mapRow(ResultSet rs) throws SQLException {
         Alert alert = new Alert();
@@ -193,11 +171,14 @@ public class AlertDaoImpl implements AlertDao {
         alert.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
         alert.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
 
-        LiquidityProjection lp = new LiquidityProjection();
-        lp.setId(rs.getObject("liquidity_projection_id", UUID.class));
-        alert.setLiquidityProjection(lp);
+        alert.setId(rs.getObject("id", UUID.class));
 
         return alert;
+    }
+
+    @Override
+    public List<FinancialTransaction> findByAccount(Account account) {
+        throw new UnsupportedOperationException("Unimplemented method 'findByAccount'");
     }
 
     @Override

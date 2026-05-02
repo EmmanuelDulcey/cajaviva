@@ -6,6 +6,8 @@ import com.cajaviva.cajaviva.exception.BusinessValidationException;
 import com.cajaviva.cajaviva.exception.ConflictException;
 import com.cajaviva.cajaviva.exception.ResourceNotFoundException;
 import com.cajaviva.cajaviva.service.UserService;
+
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -17,7 +19,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserDao userDao;
 
-    public UserServiceImpl(UserDao userDao) {
+    public UserServiceImpl(@Qualifier("UserJPAImpl") UserDao userDao) {
         this.userDao = userDao;
     }
 

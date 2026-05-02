@@ -10,4 +10,8 @@ public interface UserAccessDao extends BaseDao<UserAccess, UUID> {
     List<UserAccess> findByUserId(UUID user_id);
 
     List<UserAccess> findByAccountId(UUID account_id);
+
+    List<UserAccess> findByPersonId(UUID personId);
+
+    List<UserAccess> findByRole(String role);
 }
