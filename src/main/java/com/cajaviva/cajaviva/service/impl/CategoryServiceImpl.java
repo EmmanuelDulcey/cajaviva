@@ -4,7 +4,6 @@ import com.cajaviva.cajaviva.entity.Category;
 import com.cajaviva.cajaviva.repository.JPA.CategoryRepository;
 import com.cajaviva.cajaviva.service.CategoryService;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,7 +14,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
 
-    public CategoryServiceImpl(@Qualifier ("CategoryJPAIpml") CategoryRepository categoryRepository) {
+    public CategoryServiceImpl(CategoryRepository categoryRepository) {
         this.categoryRepository = categoryRepository;
     }
 

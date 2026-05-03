@@ -1,6 +1,5 @@
 server:
   port: 8080
-   # para abrir el swagger en el localhost:  http://localhost:8080/v1/swagger-ui.html
   servlet:
     context-path: /v1
 
@@ -10,8 +9,7 @@ spring:
   mvc:
     throw-exception-if-no-handler-found: true
   profiles:
-    active: h2   # si quieren cambiar la base de datos a la que estamos usardo, 
-                #solamente cambien el valor de este perfil a "sqlserver"
+    active: h2
 
 ---
 spring:
@@ -19,10 +17,14 @@ spring:
     activate:
       on-profile: h2
   datasource:
-    url: jdbc:h2:mem:testdb
+    url: jdbc:h2:mem:cajaviva;NON_KEYWORDS=VALUE
     driver-class-name: org.h2.Driver
     username: sa
     password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
   jpa:
     hibernate:
       ddl-auto: create-drop
@@ -55,7 +57,7 @@ spring:
       ddl-auto: none
     show-sql: true
   flyway:
-    enabled: true
+    enabled: false
     locations: classpath:db/migration
   web:
     resources:

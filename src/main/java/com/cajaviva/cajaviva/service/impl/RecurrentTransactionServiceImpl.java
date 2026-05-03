@@ -6,7 +6,6 @@ import com.cajaviva.cajaviva.entity.Account;
 import com.cajaviva.cajaviva.entity.Category;
 import com.cajaviva.cajaviva.service.RecurrentTransactionService;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,7 +16,7 @@ public class RecurrentTransactionServiceImpl implements RecurrentTransactionServ
 
     private final RecurrentTransactionRepository recurrentTransactionRepository;
 
-    public RecurrentTransactionServiceImpl(@Qualifier("RecurrentTransactionJPAIpml") RecurrentTransactionRepository recurrentTransactionRepository) {
+    public RecurrentTransactionServiceImpl(RecurrentTransactionRepository recurrentTransactionRepository) {
         this.recurrentTransactionRepository = recurrentTransactionRepository;
     }
 
@@ -83,7 +82,6 @@ public class RecurrentTransactionServiceImpl implements RecurrentTransactionServ
 
     @Override
     public List<RecurrentTransaction> findByAccountId(UUID account_id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findByAccountId'");
+        return recurrentTransactionRepository.findByAccount_Id(account_id);
     }
 }

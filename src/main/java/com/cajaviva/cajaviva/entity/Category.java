@@ -10,7 +10,7 @@ public class Category {
 
     @Id
     @GeneratedValue
-    @Column(name = "category_id", columnDefinition = "uniqueidentifier")
+    @Column(name = "id")
     private UUID id;
 
     @Column(name = "name", nullable = false, length = 100)

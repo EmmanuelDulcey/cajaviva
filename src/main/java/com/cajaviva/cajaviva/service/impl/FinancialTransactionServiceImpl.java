@@ -4,7 +4,6 @@ import com.cajaviva.cajaviva.entity.FinancialTransaction;
 import com.cajaviva.cajaviva.repository.JPA.FinancialTransactionRepository;
 import com.cajaviva.cajaviva.service.FinancialTransactionService;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,7 +14,7 @@ public class FinancialTransactionServiceImpl implements FinancialTransactionServ
 
     private final FinancialTransactionRepository transactionRepository;
 
-    public FinancialTransactionServiceImpl(@Qualifier("FinancialTransactionJPAIpml") FinancialTransactionRepository transactionRepository) {
+    public FinancialTransactionServiceImpl(FinancialTransactionRepository transactionRepository) {
         this.transactionRepository = transactionRepository;
     }
 
@@ -56,7 +55,6 @@ public class FinancialTransactionServiceImpl implements FinancialTransactionServ
 
     @Override
     public List<FinancialTransaction> findByAccountId(UUID account_id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findByAccountId'");
+        return transactionRepository.findByAccount_Id(account_id);
     }
 }

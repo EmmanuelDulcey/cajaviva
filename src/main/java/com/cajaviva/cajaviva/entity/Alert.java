@@ -6,12 +6,12 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "alerts") // nombre de la tabla en tu BD
+@Table(name = "alerts")
 public class Alert {
 
     @Id
     @GeneratedValue
-    @Column(name = "alert_id", columnDefinition = "UUID", updatable = false, nullable = false)
+    @Column(name = "id")
     private UUID id;
 
     @Column(name = "type", nullable = false)
@@ -32,14 +32,12 @@ public class Alert {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // 🔥 Relación JPA con LiquidityProjection
     @ManyToOne
     @JoinColumn(name = "liquidity_projection_id", nullable = false)
     private LiquidityProjection liquidityProjection;
 
     public Alert() {}
 
-    // Getters y setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
 
@@ -64,8 +62,18 @@ public class Alert {
     public LiquidityProjection getLiquidityProjection() { return liquidityProjection; }
     public void setLiquidityProjection(LiquidityProjection liquidityProjection) { this.liquidityProjection = liquidityProjection; }
 
-    public Object getLiquidityProjectionId() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getLiquidityProjectionId'");
+    @Transient
+    public UUID getLiquidityProjectionId() {
+        return liquidityProjection != null ? liquidityProjection.getId() : null;
+    }
+
+    public void setLiquidityProjectionId(UUID liquidityProjectionId) {
+        if (liquidityProjectionId == null) {
+            this.liquidityProjection = null;
+        } else {
+            LiquidityProjection projection = new LiquidityProjection();
+            projection.setId(liquidityProjectionId);
+            this.liquidityProjection = projection;
+        }
     }
 }

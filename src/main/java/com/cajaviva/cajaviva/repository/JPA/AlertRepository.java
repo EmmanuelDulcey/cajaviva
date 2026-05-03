@@ -11,5 +11,5 @@ import java.util.UUID;
 public interface AlertRepository extends JpaRepository<Alert, UUID> {
     List<Alert> findByStatus(Integer status);
     List<Alert> findByType(Integer type);
-    List<Alert> findByLiquidityProjectionId(UUID liquidityProjectionId);
+    List<Alert> findByLiquidityProjection_Id(UUID liquidityProjectionId);
 }
