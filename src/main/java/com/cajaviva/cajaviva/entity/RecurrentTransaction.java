@@ -12,11 +12,14 @@ public class RecurrentTransaction {
 
     @Id
     @GeneratedValue
-    @Column(name = "recurrent_transaction_id", columnDefinition = "uniqueidentifier")
+    @Column(name = "id")
     private UUID id;
 
     @Column(name = "value", nullable = false)
     private BigDecimal value;
+
+    @Column(name = "status")
+    private Integer status;
 
     @Column(name = "initial_date", nullable = false)
     private LocalDate initialDate;
@@ -36,24 +39,24 @@ public class RecurrentTransaction {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Relación con Account
     @ManyToOne
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 
-    // Relación con Category
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
     public RecurrentTransaction() {}
 
-    // Getters y setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
 
     public BigDecimal getValue() { return value; }
     public void setValue(BigDecimal value) { this.value = value; }
+
+    public Integer getStatus() { return status; }
+    public void setStatus(Integer status) { this.status = status; }
 
     public LocalDate getInitialDate() { return initialDate; }
     public void setInitialDate(LocalDate initialDate) { this.initialDate = initialDate; }
@@ -79,39 +82,36 @@ public class RecurrentTransaction {
     public Category getCategory() { return category; }
     public void setCategory(Category category) { this.category = category; }
 
-    public Object getAmount() {
-        throw new UnsupportedOperationException("Unimplemented method 'getAmount'");
+    public BigDecimal getAmount() { return value; }
+    public void setAmount(BigDecimal amount) { this.value = amount; }
+
+    @Transient
+    public UUID getAccountId() {
+        return account != null ? account.getId() : null;
     }
 
-    public void setAmount(Object amount) {
-        throw new UnsupportedOperationException("Unimplemented method 'setAmount'");
+    public void setAccountId(UUID accountId) {
+        if (accountId == null) {
+            this.account = null;
+        } else {
+            Account account = new Account();
+            account.setId(accountId);
+            this.account = account;
+        }
     }
 
-    public Object getStatus() {
-        throw new UnsupportedOperationException("Unimplemented method 'getStatus'");
+    @Transient
+    public UUID getCategoryId() {
+        return category != null ? category.getId() : null;
     }
 
-    public void setStatus(Object status) {
-        throw new UnsupportedOperationException("Unimplemented method 'setStatus'");
-    }
-
-    public void setAccountId(UUID object) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setAccountId'");
-    }
-
-    public void setCategoryId(UUID object) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setCategoryId'");
-    }
-
-    public Object getAccountId() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAccountId'");
-    }
-
-    public Object getCategoryId() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getCategoryId'");
+    public void setCategoryId(UUID categoryId) {
+        if (categoryId == null) {
+            this.category = null;
+        } else {
+            Category category = new Category();
+            category.setId(categoryId);
+            this.category = category;
+        }
     }
 }

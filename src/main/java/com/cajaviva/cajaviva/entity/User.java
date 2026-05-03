@@ -38,12 +38,11 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<Account> accounts;
 
-    public User(UUID userId) {
-
+    public User() {
     }
 
-    public User() {
-        //TODO Auto-generated constructor stub
+    public User(UUID userId) {
+        this.id = userId;
     }
 
     // getters y setters

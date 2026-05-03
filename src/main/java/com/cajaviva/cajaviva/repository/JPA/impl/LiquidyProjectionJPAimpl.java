@@ -60,17 +60,16 @@ public class LiquidyProjectionJPAimpl implements LiquidityProjectionDao {
 
     @Override
     public List<FinancialTransaction> findByStatus(Integer status) {
-        throw new UnsupportedOperationException("Unimplemented method 'findByStatus'");
+        return List.of();
     }
 
     @Override
     public List<LiquidityProjection> findByAccountId(UUID account_id) {
-        throw new UnsupportedOperationException("Unimplemented method 'findByAccountId'");
+        return projectionRepository.findByAccount_Id(account_id);
     }
 
     @Override
     public List<User> findByActive(boolean active) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findByActive'");
+        return List.of();
     }
 }

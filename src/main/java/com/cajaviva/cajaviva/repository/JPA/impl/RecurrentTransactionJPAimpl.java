@@ -73,24 +73,24 @@ public class RecurrentTransactionJPAimpl implements RecurrentTransactionDao {
 
     @Override
     public List<RecurrentTransaction> findByAccount(UUID account_id) {
-        throw new UnsupportedOperationException("Unimplemented method 'findByAccount'");
+        return recurrentTransactionRepository.findByAccount_Id(account_id);
     }
 
     @Override
     public List<RecurrentTransaction> findByAccountId(UUID account_id) {
-        throw new UnsupportedOperationException("Unimplemented method 'findByAccountId'");
+        return recurrentTransactionRepository.findByAccount_Id(account_id);
     }
 
     @Override
     public List<RecurrentTransaction> findByCategoryId(UUID categoryId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findByCategoryId'");
+        Category category = new Category();
+        category.setId(categoryId);
+        return recurrentTransactionRepository.findByCategory(category);
     }
 
     @Override
     public List<User> findByActive(boolean active) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findByActive'");
+        return List.of();
     }
 
 }

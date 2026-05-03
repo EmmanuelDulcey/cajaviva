@@ -11,7 +11,7 @@ public class FinancialTransaction {
 
     @Id
     @GeneratedValue
-    @Column(name = "transaction_id", columnDefinition = "uniqueidentifier")
+    @Column(name = "id")
     private UUID id;
 
     @Column(name = "value", nullable = false)

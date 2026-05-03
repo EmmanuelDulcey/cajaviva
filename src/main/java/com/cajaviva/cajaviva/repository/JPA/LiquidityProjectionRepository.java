@@ -9,5 +9,6 @@ import java.util.UUID;
 
 public interface LiquidityProjectionRepository extends JpaRepository<LiquidityProjection, UUID> {
     List<LiquidityProjection> findByAccount(Account account);
+    List<LiquidityProjection> findByAccount_Id(UUID accountId);
     List<LiquidityProjection> findByProjectionDate(java.time.LocalDate projectionDate);
 }

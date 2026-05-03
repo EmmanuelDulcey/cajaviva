@@ -47,28 +47,26 @@ public class UserAccessJPAImpl implements UserAccessDao {
 
     @Override
     public List<UserAccess> findByPersonId(UUID personId) {
-        return userAccessRepository.findByPersonId(personId);
+        return userAccessRepository.findByUser_Id(personId);
     }
 
     @Override
     public List<UserAccess> findByAccountId(UUID accountId) {
-        return userAccessRepository.findByAccountId(accountId);
+        return userAccessRepository.findByAccount_Id(accountId);
     }
 
     @Override
     public List<UserAccess> findByRole(String role) {
-        return userAccessRepository.findByRole(role);
+        return userAccessRepository.findByRole(Integer.valueOf(role));
     }
 
     @Override
     public List<UserAccess> findByUserId(UUID user_id) {
-
-        throw new UnsupportedOperationException("Unimplemented method 'findByUserId'");
+        return userAccessRepository.findByUser_Id(user_id);
     }
 
     @Override
     public List<User> findByActive(boolean active) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findByActive'");
+        return List.of();
     }
 }

@@ -12,7 +12,7 @@ public class LiquidityProjection {
 
     @Id
     @GeneratedValue
-    @Column(name = "projection_id", columnDefinition = "UUID", updatable = false, nullable = false)
+    @Column(name = "id")
     private UUID id;
 
     @Column(name = "calculation_date", nullable = false)
@@ -30,14 +30,12 @@ public class LiquidityProjection {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    //  Relación con Account
     @ManyToOne
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 
     public LiquidityProjection() {}
 
-    // Getters y setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
 
@@ -59,21 +57,21 @@ public class LiquidityProjection {
     public Account getAccount() { return account; }
     public void setAccount(Account account) { this.account = account; }
 
-    public Object getAmount() {
-        throw new UnsupportedOperationException("Unimplemented method 'getAmount'");
+    public BigDecimal getAmount() { return projectedBalance; }
+    public void setAmount(BigDecimal amount) { this.projectedBalance = amount; }
+
+    @Transient
+    public UUID getAccountId() {
+        return account != null ? account.getId() : null;
     }
 
-    public void setAmount(Object amount) {
-        throw new UnsupportedOperationException("Unimplemented method 'setAmount'");
-    }
-
-    public Object getAccountId() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAccountId'");
-    }
-
-    public void setAccountId(UUID object) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setAccountId'");
+    public void setAccountId(UUID accountId) {
+        if (accountId == null) {
+            this.account = null;
+        } else {
+            Account account = new Account();
+            account.setId(accountId);
+            this.account = account;
+        }
     }
 }

@@ -25,43 +25,24 @@ public class FinancialTransactionDaoImpl implements FinancialTransactionDao {
 
     @Override
     public List<FinancialTransaction> findAll() {
-        List<FinancialTransaction> result = new ArrayList<>();
-        try (Connection conn = conexion.obtenerConexion();
-             PreparedStatement ps = conn.prepareStatement("SELECT * FROM FinancialTransactions");
-             ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-                result.add(mapRow(rs));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return result;
+        return query("SELECT * FROM financial_transactions", ps -> {});
     }
 
     @Override
     public Optional<FinancialTransaction> findById(UUID id) {
-        FinancialTransaction ft = null;
-        try (Connection conn = conexion.obtenerConexion();
-             PreparedStatement ps = conn.prepareStatement("SELECT * FROM FinancialTransactions WHERE id = ?")) {
-
-            ps.setObject(1, id);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                ft = mapRow(rs);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return Optional.ofNullable(ft);
+        List<FinancialTransaction> result = query("SELECT * FROM financial_transactions WHERE id = ?", ps -> ps.setObject(1, id));
+        return result.stream().findFirst();
     }
 
     @Override
     public FinancialTransaction save(FinancialTransaction entity) {
         try (Connection conn = conexion.obtenerConexion();
              PreparedStatement ps = conn.prepareStatement(
-                     "INSERT INTO FinancialTransactions (id, value, description, date, status, created_at, updated_at, account_id, category_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                     "INSERT INTO financial_transactions (id, value, description, date, status, created_at, updated_at, account_id, category_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
 
+            if (entity.getId() == null) {
+                entity.setId(UUID.randomUUID());
+            }
             ps.setObject(1, entity.getId());
             ps.setBigDecimal(2, entity.getValue());
             ps.setString(3, entity.getDescription());
@@ -74,39 +55,34 @@ public class FinancialTransactionDaoImpl implements FinancialTransactionDao {
             if (entity.getCategory() != null) {
                 ps.setObject(9, entity.getCategory().getId());
             } else {
-                ps.setNull(9, Types.NULL);
+                ps.setNull(9, Types.OTHER);
             }
 
             ps.executeUpdate();
+            return entity;
         } catch (SQLException e) {
             e.printStackTrace();
-            entity = null;
+            return null;
         }
-        return entity;
     }
 
     @Override
     public boolean existsById(UUID id) {
-        boolean exists = false;
         try (Connection conn = conexion.obtenerConexion();
-             PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM FinancialTransactions WHERE id = ?")) {
-
+             PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM financial_transactions WHERE id = ?")) {
             ps.setObject(1, id);
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                exists = rs.getInt(1) > 0;
-            }
+            return rs.next() && rs.getInt(1) > 0;
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
         }
-        return exists;
     }
 
     @Override
     public void deleteById(UUID id) {
         try (Connection conn = conexion.obtenerConexion();
-             PreparedStatement ps = conn.prepareStatement("DELETE FROM FinancialTransactions WHERE id = ?")) {
-
+             PreparedStatement ps = conn.prepareStatement("DELETE FROM financial_transactions WHERE id = ?")) {
             ps.setObject(1, id);
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -116,67 +92,51 @@ public class FinancialTransactionDaoImpl implements FinancialTransactionDao {
 
     @Override
     public List<FinancialTransaction> findByAccount(Account account) {
-        List<FinancialTransaction> result = new ArrayList<>();
-        try (Connection conn = conexion.obtenerConexion();
-             PreparedStatement ps = conn.prepareStatement("SELECT * FROM FinancialTransactions WHERE account_id = ?")) {
-
-            ps.setObject(1, account.getId());
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                result.add(mapRow(rs));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return result;
+        return findByAccountId(account.getId());
     }
 
     @Override
     public List<FinancialTransaction> findByCategory(Category category) {
-        List<FinancialTransaction> result = new ArrayList<>();
-        try (Connection conn = conexion.obtenerConexion();
-             PreparedStatement ps = conn.prepareStatement("SELECT * FROM FinancialTransactions WHERE category_id = ?")) {
-
-            ps.setObject(1, category.getId());
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                result.add(mapRow(rs));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return result;
+        return findByCategoryId(category.getId());
     }
 
     @Override
     public List<FinancialTransaction> findByStatus(Integer status) {
-        List<FinancialTransaction> result = new ArrayList<>();
-        try (Connection conn = conexion.obtenerConexion();
-             PreparedStatement ps = conn.prepareStatement("SELECT * FROM FinancialTransactions WHERE status = ?")) {
-
-            ps.setInt(1, status);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                result.add(mapRow(rs));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return result;
+        return query("SELECT * FROM financial_transactions WHERE status = ?", ps -> ps.setInt(1, status));
     }
 
     @Override
     public List<FinancialTransaction> findByAccountAndCategory(Account account, Category category) {
-        List<FinancialTransaction> result = new ArrayList<>();
-        try (Connection conn = conexion.obtenerConexion();
-             PreparedStatement ps = conn.prepareStatement(
-                     "SELECT * FROM FinancialTransactions WHERE account_id = ? AND category_id = ?")) {
-
+        return query("SELECT * FROM financial_transactions WHERE account_id = ? AND category_id = ?", ps -> {
             ps.setObject(1, account.getId());
             ps.setObject(2, category.getId());
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                result.add(mapRow(rs));
+        });
+    }
+
+    @Override
+    public List<FinancialTransaction> findByAccountId(UUID accountId) {
+        return query("SELECT * FROM financial_transactions WHERE account_id = ?", ps -> ps.setObject(1, accountId));
+    }
+
+    @Override
+    public List<FinancialTransaction> findByCategoryId(UUID categoryId) {
+        return query("SELECT * FROM financial_transactions WHERE category_id = ?", ps -> ps.setObject(1, categoryId));
+    }
+
+    @Override
+    public List<User> findByActive(boolean active) {
+        return List.of();
+    }
+
+    private List<FinancialTransaction> query(String sql, SqlBinder binder) {
+        List<FinancialTransaction> result = new ArrayList<>();
+        try (Connection conn = conexion.obtenerConexion();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            binder.bind(ps);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(mapRow(rs));
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -184,7 +144,6 @@ public class FinancialTransactionDaoImpl implements FinancialTransactionDao {
         return result;
     }
 
-    // Método auxiliar para mapear ResultSet a entidad
     private FinancialTransaction mapRow(ResultSet rs) throws SQLException {
         FinancialTransaction ft = new FinancialTransaction();
         ft.setId(rs.getObject("id", UUID.class));
@@ -209,21 +168,8 @@ public class FinancialTransactionDaoImpl implements FinancialTransactionDao {
         return ft;
     }
 
-    @Override
-    public List<FinancialTransaction> findByAccountId(UUID account_id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findByAccountId'");
-    }
-
-    @Override
-    public List<FinancialTransaction> findByCategoryId(UUID categoryId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findByCategoryId'");
-    }
-
-    @Override
-    public List<User> findByActive(boolean active) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findByActive'");
+    @FunctionalInterface
+    private interface SqlBinder {
+        void bind(PreparedStatement ps) throws SQLException;
     }
 }

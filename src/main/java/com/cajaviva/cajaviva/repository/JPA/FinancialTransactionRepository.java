@@ -10,6 +10,9 @@ import java.util.UUID;
 
 public interface FinancialTransactionRepository extends JpaRepository<FinancialTransaction, UUID> {
     List<FinancialTransaction> findByAccount(Account account);
+    List<FinancialTransaction> findByAccount_Id(UUID accountId);
     List<FinancialTransaction> findByCategory(Category category);
+    List<FinancialTransaction> findByCategory_Id(UUID categoryId);
     List<FinancialTransaction> findByStatus(Integer status);
+    List<FinancialTransaction> findByAccountAndCategory(Account account, Category category);
 }

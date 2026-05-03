@@ -178,12 +178,11 @@ public class AlertJPAImpl implements AlertDao {
 
     @Override
     public List<FinancialTransaction> findByAccount(Account account) {
-        throw new UnsupportedOperationException("Unimplemented method 'findByAccount'");
+        return List.of();
     }
 
     @Override
     public List<User> findByActive(boolean active) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findByActive'");
+        return List.of();
     }
 }

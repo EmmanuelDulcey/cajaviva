@@ -64,22 +64,21 @@ public class FinancialTransactionDaoImpl implements FinancialTransactionDao {
 
     @Override
     public List<FinancialTransaction> findByAccountId(UUID account_id) {
-        throw new UnsupportedOperationException("Unimplemented method 'findByAccountId'");
+        return transactionRepository.findByAccount_Id(account_id);
     }
 
     @Override
     public List<FinancialTransaction> findByCategoryId(UUID categoryId) {
-        throw new UnsupportedOperationException("Unimplemented method 'findByCategoryId'");
+        return transactionRepository.findByCategory_Id(categoryId);
     }
 
     @Override
     public List<FinancialTransaction> findByAccountAndCategory(Account account, Category category) {
-        throw new UnsupportedOperationException("Unimplemented method 'findByAccountAndCategory'");
+        return transactionRepository.findByAccountAndCategory(account, category);
     }
 
     @Override
     public List<User> findByActive(boolean active) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findByActive'");
+        return List.of();
     }
 }

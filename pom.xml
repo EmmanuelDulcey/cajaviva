@@ -59,19 +59,6 @@
             <artifactId>flyway-core</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-sqlserver</artifactId>
-        </dependency>
-
-        <!-- Driver de SQL Server (para cuando tengas acceso real) -->
-        <dependency>
-            <groupId>com.microsoft.sqlserver</groupId>
-            <artifactId>mssql-jdbc</artifactId>
-            <version>12.6.3.jre11</version>
-            <scope>runtime</scope>
-        </dependency>
-
         <!-- Documentación con OpenAPI/Swagger -->
         <dependency>
             <groupId>org.springdoc</groupId>
