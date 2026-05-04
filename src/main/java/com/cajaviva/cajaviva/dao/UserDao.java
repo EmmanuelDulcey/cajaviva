@@ -1,14 +1,13 @@
 package com.cajaviva.cajaviva.dao;
 
 import com.cajaviva.cajaviva.entity.User;
-
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
-public interface UserDao extends BaseDao<User, UUID> {
-
-    Optional<User> findByEmail(String email);
-
-    List<User> findByActive(boolean active);
+public interface UserDao {
+    List<User> findAll();
+    User findById(UUID id);
+    User create(User user);
+    User update(UUID id, User user);
+    void delete(UUID id);
 }

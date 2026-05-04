@@ -2,15 +2,9 @@ package com.cajaviva.cajaviva.service.impl;
 
 import com.cajaviva.cajaviva.dao.UserDao;
 import com.cajaviva.cajaviva.entity.User;
-import com.cajaviva.cajaviva.exception.BusinessValidationException;
-import com.cajaviva.cajaviva.exception.ConflictException;
-import com.cajaviva.cajaviva.exception.ResourceNotFoundException;
 import com.cajaviva.cajaviva.service.UserService;
-
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,7 +13,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserDao userDao;
 
-    public UserServiceImpl(@Qualifier("UserJPAImpl") UserDao userDao) {
+    public UserServiceImpl(UserDao userDao) {
         this.userDao = userDao;
     }
 
@@ -30,80 +24,21 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User findById(UUID id) {
-        return userDao.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontró el usuario con id: " + id));
+        return userDao.findById(id);
     }
 
     @Override
     public User create(User user) {
-        validateUserPayload(user, true);
-        validateEmailAvailability(user.getEmail(), null);
-
-        LocalDateTime now = LocalDateTime.now();
-        user.setId(null);
-        user.setActive(user.getActive() != null ? user.getActive() : true);
-        user.setCreatedAt(now);
-        user.setUpdatedAt(now);
-
-        return userDao.save(user);
+        return userDao.create(user);
     }
 
     @Override
     public User update(UUID id, User user) {
-        User existingUser = findById(id);
-        validateUserPayload(user, false);
-
-        String emailToPersist = isBlank(user.getEmail()) ? existingUser.getEmail() : user.getEmail();
-        validateEmailAvailability(emailToPersist, id);
-
-        existingUser.setName(isBlank(user.getName()) ? existingUser.getName() : user.getName());
-        existingUser.setLastName(isBlank(user.getLastName()) ? existingUser.getLastName() : user.getLastName());
-        existingUser.setEmail(emailToPersist);
-        existingUser.setActive(user.getActive() != null ? user.getActive() : existingUser.getActive());
-        existingUser.setPasswordDigest(isBlank(user.getPasswordDigest()) ? existingUser.getPasswordDigest() : user.getPasswordDigest());
-        existingUser.setUpdatedAt(LocalDateTime.now());
-
-        return userDao.save(existingUser);
+        return userDao.update(id, user);
     }
 
     @Override
     public void delete(UUID id) {
-        findById(id);
-        userDao.deleteById(id);
-    }
-
-    // 🔎 Validaciones de negocio
-    private void validateEmailAvailability(String email, UUID currentUserId) {
-        userDao.findByEmail(email)
-                .filter(existingUser -> !existingUser.getId().equals(currentUserId))
-                .ifPresent(existingUser -> {
-                    throw new ConflictException("Este email ya se encuentra registrado.");
-                });
-    }
-
-    private void validateUserPayload(User user, boolean requirePasswordDigest) {
-        if (user == null) {
-            throw new BusinessValidationException("El cuerpo de la solicitud del usuario es obligatorio.");
-        }
-
-        if (requirePasswordDigest && isBlank(user.getName())) {
-            throw new BusinessValidationException("El nombre del usuario es obligatorio.");
-        }
-
-        if (requirePasswordDigest && isBlank(user.getLastName())) {
-            throw new BusinessValidationException("El apellido del usuario es obligatorio.");
-        }
-
-        if (requirePasswordDigest && isBlank(user.getEmail())) {
-            throw new BusinessValidationException("El email del usuario es obligatorio.");
-        }
-
-        if (requirePasswordDigest && isBlank(user.getPasswordDigest())) {
-            throw new BusinessValidationException("La contraseña del usuario es obligatoria.");
-        }
-    }
-
-    private boolean isBlank(String value) {
-        return value == null || value.trim().isEmpty();
+        userDao.delete(id);
     }
 }

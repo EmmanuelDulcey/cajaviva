@@ -2,48 +2,43 @@ package com.cajaviva.cajaviva.controller;
 
 import com.cajaviva.cajaviva.entity.User;
 import com.cajaviva.cajaviva.service.UserService;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
+import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/users")
 public class UserController {
 
-    private final UserService userService;
+    private final UserService service;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
+    public UserController(UserService service) {
+        this.service = service;
     }
 
     @GetMapping
-    public List<User> getAllUsers() {
-        return userService.findAll();
+    public List<User> getAll() {
+        return service.findAll();
     }
 
     @GetMapping("/{id}")
-    public User getUserById(@PathVariable UUID id) {
-        return userService.findById(id);
+    public User getById(@PathVariable UUID id) {
+        return service.findById(id);
     }
 
     @PostMapping
-    public User createUser(@RequestBody User user) {
-        return userService.create(user);
+    public User create(@RequestBody User user) {
+        return service.create(user);
     }
 
     @PutMapping("/{id}")
-    public User updateUser(@PathVariable UUID id, @RequestBody User user) {
-        return userService.update(id, user);
+    public User update(@PathVariable UUID id, @RequestBody User user) {
+        return service.update(id, user);
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteUser(@PathVariable UUID id) {
-        userService.delete(id);
+    public void delete(@PathVariable UUID id) {
+        service.delete(id);
     }
-    
 }

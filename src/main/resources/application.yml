@@ -9,7 +9,7 @@ spring:
   mvc:
     throw-exception-if-no-handler-found: true
   profiles:
-    active: h2
+    active: h2   # Perfil por defecto: desarrollo con H2
 
 ---
 spring:
@@ -20,7 +20,7 @@ spring:
     url: jdbc:h2:mem:cajaviva;NON_KEYWORDS=VALUE
     driver-class-name: org.h2.Driver
     username: sa
-    password:
+    password: 5288297Ema$
   h2:
     console:
       enabled: true
@@ -51,7 +51,7 @@ spring:
     url: jdbc:sqlserver://localhost:1433;databaseName=CajaViva;encrypt=true;trustServerCertificate=true
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
     username: sa
-    password: admin
+    password: 5288297Ema$   # Igual que en UserConfig
   jpa:
     hibernate:
       ddl-auto: none
