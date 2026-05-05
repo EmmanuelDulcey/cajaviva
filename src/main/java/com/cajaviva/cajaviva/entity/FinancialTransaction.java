@@ -72,23 +72,15 @@ public class FinancialTransaction {
     public Category getCategory() { return category; }
     public void setCategory(Category category) { this.category = category; }
 
-    public void setCategoryId(UUID categoryId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setCategoryId'");
+    public UUID getCategoryId() {
+        return category != null ? category.getId() : null;
     }
 
-    public Object getCategoryId() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getCategoryId'");
+    public UUID getAccountId() {
+        return account != null ? account.getId() : null;
     }
 
-    public Object getAccountId() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAccountId'");
-    }
-
-    public void setAmount(BigDecimal bigDecimal) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setAmount'");
+    public void setAmount(BigDecimal amount) {
+        this.value = amount;
     }
 }

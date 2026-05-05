@@ -22,20 +22,30 @@ public class UserServiceImpl implements UserService {
         return userDao.findAll();
     }
 
-    @Override
-    public User findById(UUID id) {
-        return userDao.findById(id);
+@Override
+public User findById(UUID id) {
+    User user = userDao.findById(id);
+    if (user == null) {
+        throw new com.cajaviva.cajaviva.exception.ResourceNotFoundException("User not found: " + id);
     }
+    return user;
+}
 
     @Override
     public User create(User user) {
+        // Si no tiene id, generar uno nuevo
+        if (user.getId() == null) user.setId(UUID.randomUUID());
         return userDao.create(user);
     }
 
-    @Override
-    public User update(UUID id, User user) {
-        return userDao.update(id, user);
+@Override
+public User update(UUID id, User user) {
+    User updated = userDao.update(id, user);
+    if (updated == null) {
+        throw new com.cajaviva.cajaviva.exception.ResourceNotFoundException("User not found: " + id);
     }
+    return updated;
+}
 
     @Override
     public void delete(UUID id) {

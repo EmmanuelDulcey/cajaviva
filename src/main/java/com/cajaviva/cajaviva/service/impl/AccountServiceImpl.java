@@ -27,21 +27,34 @@ public class AccountServiceImpl implements AccountService {
         return repository.findById(id).orElse(null);
     }
 
-    @Override
-    public Account create(Account account) {
-        return repository.save(account);
+@Override
+public Account create(Account account) {
+    if (account.getId() == null) {
+        account.setId(java.util.UUID.randomUUID());
     }
+    java.time.LocalDateTime now = java.time.LocalDateTime.now();
+    account.setCreatedAt(now);
+    account.setUpdatedAt(now);
+    return repository.save(account);
+}
 
-    @Override
-    public Account update(UUID id, Account account) {
-        account.setId(id);
-        return repository.save(account);
+@Override
+public Account update(UUID id, Account account) {
+    if (!repository.existsById(id)) {
+        return null;
     }
+    account.setId(id);
+    account.setUpdatedAt(java.time.LocalDateTime.now());
+    return repository.save(account);
+}
 
-    @Override
-    public void delete(UUID id) {
-        repository.deleteById(id);
+@Override
+public void delete(UUID id) {
+    if (!repository.existsById(id)) {
+        throw new com.cajaviva.cajaviva.exception.ResourceNotFoundException("Account not found: " + id);
     }
+    repository.deleteById(id);
+}
 
     @Override
     public List<Account> findByUserId(UUID userId) {

@@ -3,6 +3,7 @@ package com.cajaviva.cajaviva.service.impl;
 import com.cajaviva.cajaviva.entity.Alert;
 import com.cajaviva.cajaviva.repository.JPA.AlertRepository;
 import com.cajaviva.cajaviva.service.AlertService;
+import com.cajaviva.cajaviva.exception.ResourceNotFoundException;
 
 import org.springframework.stereotype.Service;
 
@@ -26,7 +27,7 @@ public class AlertServiceImpl implements AlertService {
     @Override
     public Alert findById(UUID id) {
         return alertRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Alerta no encontrada con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Alerta no encontrada con id: " + id));
     }
 
     @Override

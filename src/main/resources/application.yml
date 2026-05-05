@@ -9,63 +9,66 @@ spring:
   mvc:
     throw-exception-if-no-handler-found: true
   profiles:
-    active: h2   # Perfil por defecto: desarrollo con H2
+    active: h2
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
 
 ---
+
 spring:
   config:
     activate:
       on-profile: h2
+
   datasource:
     url: jdbc:h2:mem:cajaviva;NON_KEYWORDS=VALUE
     driver-class-name: org.h2.Driver
     username: sa
-    password: 5288297Ema$
+    password: admin
+
   h2:
     console:
       enabled: true
       path: /h2-console
+
   jpa:
     hibernate:
       ddl-auto: create-drop
     show-sql: true
+
   flyway:
     enabled: false
+
   web:
     resources:
       add-mappings: false
 
-springdoc:
-  api-docs:
-    enabled: true
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-
 ---
+
 spring:
   config:
     activate:
       on-profile: sqlserver
+
   datasource:
     url: jdbc:sqlserver://localhost:1433;databaseName=CajaViva;encrypt=true;trustServerCertificate=true
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
     username: sa
-    password: 5288297Ema$   # Igual que en UserConfig
+    password: admin
+
   jpa:
     hibernate:
       ddl-auto: none
     show-sql: true
+
   flyway:
     enabled: false
-    locations: classpath:db/migration
+
   web:
     resources:
       add-mappings: false
-
-springdoc:
-  api-docs:
-    enabled: true
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html

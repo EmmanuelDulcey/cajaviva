@@ -5,10 +5,7 @@ import com.cajaviva.cajaviva.entity.User;
 import com.cajaviva.cajaviva.utilities.Conexion;
 import org.springframework.stereotype.Repository;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -24,13 +21,13 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public List<User> findAll() {
-        List<User> users = new ArrayList<>();
 
+        List<User> users = new ArrayList<>();
         String sql = "SELECT id, name, email FROM users";
 
         try (
-                Connection connection = conexion.obtenerConexion();
-                PreparedStatement stmt = connection.prepareStatement(sql);
+                Connection conn = conexion.obtenerConexion();
+                PreparedStatement stmt = conn.prepareStatement(sql);
                 ResultSet rs = stmt.executeQuery()
         ) {
 
@@ -42,8 +39,8 @@ public class UserDaoImpl implements UserDao {
                 users.add(user);
             }
 
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
         return users;
@@ -55,8 +52,8 @@ public class UserDaoImpl implements UserDao {
         String sql = "SELECT id, name, email FROM users WHERE id = ?";
 
         try (
-                Connection connection = conexion.obtenerConexion();
-                PreparedStatement stmt = connection.prepareStatement(sql)
+                Connection conn = conexion.obtenerConexion();
+                PreparedStatement stmt = conn.prepareStatement(sql)
         ) {
 
             stmt.setString(1, id.toString());
@@ -72,8 +69,8 @@ public class UserDaoImpl implements UserDao {
                 }
             }
 
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
         return null;
@@ -84,9 +81,13 @@ public class UserDaoImpl implements UserDao {
 
         String sql = "INSERT INTO users (id, name, email) VALUES (?, ?, ?)";
 
+        if (user.getId() == null) {
+            user.setId(UUID.randomUUID());
+        }
+
         try (
-                Connection connection = conexion.obtenerConexion();
-                PreparedStatement stmt = connection.prepareStatement(sql)
+                Connection conn = conexion.obtenerConexion();
+                PreparedStatement stmt = conn.prepareStatement(sql)
         ) {
 
             stmt.setString(1, user.getId().toString());
@@ -95,8 +96,8 @@ public class UserDaoImpl implements UserDao {
 
             stmt.executeUpdate();
 
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
         return user;
@@ -108,8 +109,8 @@ public class UserDaoImpl implements UserDao {
         String sql = "UPDATE users SET name = ?, email = ? WHERE id = ?";
 
         try (
-                Connection connection = conexion.obtenerConexion();
-                PreparedStatement stmt = connection.prepareStatement(sql)
+                Connection conn = conexion.obtenerConexion();
+                PreparedStatement stmt = conn.prepareStatement(sql)
         ) {
 
             stmt.setString(1, user.getName());
@@ -118,10 +119,11 @@ public class UserDaoImpl implements UserDao {
 
             stmt.executeUpdate();
 
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
+        user.setId(id);
         return user;
     }
 
@@ -131,15 +133,15 @@ public class UserDaoImpl implements UserDao {
         String sql = "DELETE FROM users WHERE id = ?";
 
         try (
-                Connection connection = conexion.obtenerConexion();
-                PreparedStatement stmt = connection.prepareStatement(sql)
+                Connection conn = conexion.obtenerConexion();
+                PreparedStatement stmt = conn.prepareStatement(sql)
         ) {
 
             stmt.setString(1, id.toString());
             stmt.executeUpdate();
 
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }
