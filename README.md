@@ -287,3 +287,11 @@ Emmanuel Dulcey
 [Repositorio en GitHub](https://github.com/EmmanuelDulcey/cajaviva)
 
 ---
+## Pruebas unitarias
+
+Este proyecto incluye pruebas unitarias para validar la lógica de negocio y la persistencia en los **DAOs** y **Services**, implementadas con **JUnit 5** y **Mockito**.
+
+### Ejecutar todas las pruebas
+En la raíz del proyecto:
+```bash
+mvn clean test
