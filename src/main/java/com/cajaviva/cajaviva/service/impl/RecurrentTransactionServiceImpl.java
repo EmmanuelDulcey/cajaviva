@@ -5,6 +5,7 @@ import com.cajaviva.cajaviva.repository.JPA.RecurrentTransactionRepository;
 import com.cajaviva.cajaviva.entity.Account;
 import com.cajaviva.cajaviva.entity.Category;
 import com.cajaviva.cajaviva.service.RecurrentTransactionService;
+import com.cajaviva.cajaviva.exception.ResourceNotFoundException;
 
 import org.springframework.stereotype.Service;
 
@@ -28,7 +29,7 @@ public class RecurrentTransactionServiceImpl implements RecurrentTransactionServ
     @Override
     public RecurrentTransaction findById(UUID id) {
         return recurrentTransactionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Transacción recurrente no encontrada con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Transacción recurrente no encontrada con id: " + id));
     }
 
     @Override

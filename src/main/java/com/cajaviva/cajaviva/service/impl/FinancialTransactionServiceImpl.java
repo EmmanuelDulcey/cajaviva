@@ -3,6 +3,7 @@ package com.cajaviva.cajaviva.service.impl;
 import com.cajaviva.cajaviva.entity.FinancialTransaction;
 import com.cajaviva.cajaviva.repository.JPA.FinancialTransactionRepository;
 import com.cajaviva.cajaviva.service.FinancialTransactionService;
+import com.cajaviva.cajaviva.exception.ResourceNotFoundException;
 
 import org.springframework.stereotype.Service;
 
@@ -26,7 +27,7 @@ public class FinancialTransactionServiceImpl implements FinancialTransactionServ
     @Override
     public FinancialTransaction findById(UUID id) {
         return transactionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Transacción no encontrada con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Transacción no encontrada con id: " + id));
     }
 
     @Override

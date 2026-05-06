@@ -4,6 +4,7 @@ import com.cajaviva.cajaviva.entity.LiquidityProjection;
 import com.cajaviva.cajaviva.repository.JPA.LiquidityProjectionRepository;
 import com.cajaviva.cajaviva.entity.Account;
 import com.cajaviva.cajaviva.service.LiquidityProjectionService;
+import com.cajaviva.cajaviva.exception.ResourceNotFoundException;
 
 import org.springframework.stereotype.Service;
 
@@ -28,7 +29,7 @@ public class LiquidityProjectionServiceImpl implements LiquidityProjectionServic
     @Override
     public LiquidityProjection findById(UUID id) {
         return liquidityProjectionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Proyección de liquidez no encontrada con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Proyección de liquidez no encontrada con id: " + id));
     }
 
     @Override

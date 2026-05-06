@@ -3,6 +3,7 @@ package com.cajaviva.cajaviva.service.impl;
 import com.cajaviva.cajaviva.entity.Category;
 import com.cajaviva.cajaviva.repository.JPA.CategoryRepository;
 import com.cajaviva.cajaviva.service.CategoryService;
+import com.cajaviva.cajaviva.exception.ResourceNotFoundException;
 
 import org.springframework.stereotype.Service;
 
@@ -26,7 +27,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public Category findById(UUID id) {
         return categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con id: " + id));
     }
 
     @Override

@@ -2,48 +2,107 @@ package com.cajaviva.cajaviva.controller;
 
 import com.cajaviva.cajaviva.entity.User;
 import com.cajaviva.cajaviva.service.UserService;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
 import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/users")
+@Validated
+@Tag(name = "User", description = "Operaciones CRUD sobre usuarios")
 public class UserController {
 
-    private final UserService userService;
+    private final UserService service;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
+    public UserController(UserService service) {
+        this.service = service;
     }
 
     @GetMapping
-    public List<User> getAllUsers() {
-        return userService.findAll();
+@Operation(summary = "Listar todos los usuarios", tags = {"User"},
+    responses = {
+        @ApiResponse(responseCode = "200", description = "Lista de usuarios",
+            content = @Content(mediaType = "application/json", schema = @Schema(type = "array", implementation = User.class)))
+    }
+)
+public List<User> getAll() {
+        return service.findAll();
     }
 
     @GetMapping("/{id}")
-    public User getUserById(@PathVariable UUID id) {
-        return userService.findById(id);
+@Operation(summary = "Obtener usuario por ID", tags = {"User"},
+    parameters = {
+        @Parameter(name = "id", description = "UUID del usuario", example = "11111111-2222-3333-4444-555555555555")
+    },
+    responses = {
+        @ApiResponse(responseCode = "200", description = "Usuario encontrado",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = User.class))),
+        @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
+    }
+)
+public User getById(@PathVariable UUID id) {
+        return service.findById(id);
     }
 
     @PostMapping
-    public User createUser(@RequestBody User user) {
-        return userService.create(user);
+@Operation(summary = "Crear usuario", tags = {"User"},
+    requestBody = @RequestBody(
+        required = true,
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = User.class),
+            examples = {@ExampleObject(value = "{\n  \"name\": \"Juan Pérez\",\n  \"email\": \"juan.perez@ejemplo.com\"\n}")}
+        )
+    ),
+    responses = {
+        @ApiResponse(responseCode = "200", description = "Usuario creado",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = User.class)))
+    }
+)
+public User create(@RequestBody User user) {
+        return service.create(user);
     }
 
     @PutMapping("/{id}")
-    public User updateUser(@PathVariable UUID id, @RequestBody User user) {
-        return userService.update(id, user);
+@Operation(summary = "Actualizar usuario", tags = {"User"},
+    parameters = {
+        @Parameter(name = "id", description = "UUID del usuario", example = "11111111-2222-3333-4444-555555555555")
+    },
+    requestBody = @RequestBody(
+        required = true,
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = User.class),
+            examples = {@ExampleObject(value = "{\n  \"name\": \"Juan Pérez\",\n  \"email\": \"juan.nuevo@ejemplo.com\"\n}")}
+        )
+    ),
+    responses = {
+        @ApiResponse(responseCode = "200", description = "Usuario actualizado",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = User.class))),
+        @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
+    }
+)
+public User update(@PathVariable UUID id, @RequestBody User user) {
+        return service.update(id, user);
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteUser(@PathVariable UUID id) {
-        userService.delete(id);
+@Operation(summary = "Eliminar usuario", tags = {"User"},
+    parameters = {
+        @Parameter(name = "id", description = "UUID del usuario", example = "11111111-2222-3333-4444-555555555555")
+    },
+    responses = {
+        @ApiResponse(responseCode = "200", description = "Usuario eliminado"),
+        @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
     }
-    
+)
+public void delete(@PathVariable UUID id) {
+        service.delete(id);
+    }
 }
