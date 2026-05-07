@@ -2,117 +2,121 @@ package com.cajaviva.cajaviva.service;
 
 import com.cajaviva.cajaviva.entity.FinancialTransaction;
 import com.cajaviva.cajaviva.repository.JPA.FinancialTransactionRepository;
+import com.cajaviva.cajaviva.exception.ResourceNotFoundException;
 import com.cajaviva.cajaviva.service.impl.FinancialTransactionServiceImpl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
-import java.util.Optional;
-import java.util.UUID;
-import java.util.List;
-import java.math.BigDecimal;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class FinancialTransactionServiceTest {
 
-    private FinancialTransactionRepository transactionRepository;
-    private FinancialTransactionService transactionService;
+    private FinancialTransactionRepository repository;
+    private FinancialTransactionServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        transactionRepository = Mockito.mock(FinancialTransactionRepository.class);
-        transactionService = new FinancialTransactionServiceImpl(transactionRepository);
-    }
-
-    @Test
-    void testCreateTransaction() {
-        FinancialTransaction tx = new FinancialTransaction();
-        tx.setValue(BigDecimal.valueOf(1000));
-        tx.setDescription("Pago prueba");
-
-        when(transactionRepository.save(tx)).thenReturn(tx);
-
-        FinancialTransaction created = transactionService.create(tx);
-
-        assertNotNull(created);
-        assertEquals("Pago prueba", created.getDescription());
-        assertEquals(BigDecimal.valueOf(1000), created.getValue());
-        verify(transactionRepository, times(1)).save(tx);
-    }
-
-    @Test
-    void testFindById() {
-        UUID id = UUID.randomUUID();
-        FinancialTransaction tx = new FinancialTransaction();
-        tx.setId(id);
-
-        when(transactionRepository.findById(id)).thenReturn(Optional.of(tx));
-
-        FinancialTransaction found = transactionService.findById(id);
-
-        assertNotNull(found);
-        assertEquals(id, found.getId());
-        verify(transactionRepository, times(1)).findById(id);
+        repository = mock(FinancialTransactionRepository.class);
+        service = new FinancialTransactionServiceImpl(repository);
     }
 
     @Test
     void testFindAll() {
-        FinancialTransaction tx = new FinancialTransaction();
-        tx.setValue(BigDecimal.valueOf(500));
+        List<FinancialTransaction> transactions = Arrays.asList(new FinancialTransaction(), new FinancialTransaction());
+        when(repository.findAll()).thenReturn(transactions);
 
-        when(transactionRepository.findAll()).thenReturn(List.of(tx));
+        List<FinancialTransaction> result = service.findAll();
 
-        List<FinancialTransaction> transactions = transactionService.findAll();
-
-        assertEquals(1, transactions.size());
-        assertEquals(BigDecimal.valueOf(500), transactions.get(0).getValue());
-        verify(transactionRepository, times(1)).findAll();
+        assertEquals(2, result.size());
+        verify(repository, times(1)).findAll();
     }
 
     @Test
-    void testUpdateTransaction() {
+    void testFindByIdFound() {
         UUID id = UUID.randomUUID();
         FinancialTransaction tx = new FinancialTransaction();
         tx.setId(id);
-        tx.setDescription("Original");
+        when(repository.findById(id)).thenReturn(Optional.of(tx));
 
-        when(transactionRepository.findById(id)).thenReturn(Optional.of(tx));
-        when(transactionRepository.save(any(FinancialTransaction.class))).thenReturn(tx);
+        FinancialTransaction result = service.findById(id);
 
-        FinancialTransaction updated = transactionService.update(id, tx);
-
-        assertNotNull(updated);
-        assertEquals("Original", updated.getDescription());
-        verify(transactionRepository, times(1)).save(any(FinancialTransaction.class));
+        assertNotNull(result);
+        assertEquals(id, result.getId());
+        verify(repository, times(1)).findById(id);
     }
 
     @Test
-    void testDeleteTransaction() {
+    void testFindByIdNotFoundThrowsException() {
+        UUID id = UUID.randomUUID();
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> service.findById(id));
+        verify(repository, times(1)).findById(id);
+    }
+
+    @Test
+    void testCreate() {
+        FinancialTransaction tx = new FinancialTransaction();
+        when(repository.save(any(FinancialTransaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        FinancialTransaction result = service.create(tx);
+
+        assertNotNull(result);
+        verify(repository, times(1)).save(tx);
+    }
+
+    @Test
+    void testUpdateExisting() {
+        UUID id = UUID.randomUUID();
+        FinancialTransaction existing = new FinancialTransaction();
+        existing.setId(id);
+
+        FinancialTransaction updateData = new FinancialTransaction();
+        updateData.setDescription("Updated description");
+
+        when(repository.findById(id)).thenReturn(Optional.of(existing));
+        when(repository.save(any(FinancialTransaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        FinancialTransaction result = service.update(id, updateData);
+
+        assertEquals("Updated description", result.getDescription());
+        verify(repository, times(1)).findById(id);
+        verify(repository, times(1)).save(existing);
+    }
+
+    @Test
+    void testUpdateNotFoundThrowsException() {
+        UUID id = UUID.randomUUID();
+        FinancialTransaction updateData = new FinancialTransaction();
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> service.update(id, updateData));
+        verify(repository, times(1)).findById(id);
+        verify(repository, never()).save(any(FinancialTransaction.class));
+    }
+
+    @Test
+    void testDelete() {
         UUID id = UUID.randomUUID();
 
-        doNothing().when(transactionRepository).deleteById(id);
+        service.delete(id);
 
-        transactionService.delete(id);
-
-        verify(transactionRepository, times(1)).deleteById(id);
+        verify(repository, times(1)).deleteById(id);
     }
 
     @Test
     void testFindByAccountId() {
         UUID accountId = UUID.randomUUID();
-        FinancialTransaction tx = new FinancialTransaction();
-        tx.setId(UUID.randomUUID());
-        tx.setValue(BigDecimal.valueOf(300));
+        List<FinancialTransaction> transactions = Arrays.asList(new FinancialTransaction(), new FinancialTransaction());
+        when(repository.findByAccount_Id(accountId)).thenReturn(transactions);
 
-        when(transactionRepository.findByAccount_Id(accountId)).thenReturn(List.of(tx));
+        List<FinancialTransaction> result = service.findByAccountId(accountId);
 
-        List<FinancialTransaction> transactions = transactionService.findByAccountId(accountId);
-
-        assertEquals(1, transactions.size());
-        assertEquals(BigDecimal.valueOf(300), transactions.get(0).getValue());
-        verify(transactionRepository, times(1)).findByAccount_Id(accountId);
+        assertEquals(2, result.size());
+        verify(repository, times(1)).findByAccount_Id(accountId);
     }
 }

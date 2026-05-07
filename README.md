@@ -294,4 +294,5 @@ Este proyecto incluye pruebas unitarias para validar la lógica de negocio y la 
 ### Ejecutar todas las pruebas
 En la raíz del proyecto:
 ```bash
-mvn clean test
+mvn clean test 
+mvn -Dtest=NombreDelTest test

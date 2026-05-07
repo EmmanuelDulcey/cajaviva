@@ -2,15 +2,13 @@ package com.cajaviva.cajaviva.service;
 
 import com.cajaviva.cajaviva.dao.UserDao;
 import com.cajaviva.cajaviva.entity.User;
-import com.cajaviva.cajaviva.service.impl.UserServiceImpl;
 import com.cajaviva.cajaviva.exception.ResourceNotFoundException;
+import com.cajaviva.cajaviva.service.impl.UserServiceImpl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -18,101 +16,101 @@ import static org.mockito.Mockito.*;
 class UserServiceTest {
 
     private UserDao userDao;
-    private UserService userService;
+    private UserServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        userDao = Mockito.mock(UserDao.class);
-        userService = new UserServiceImpl(userDao);
-    }
-
-    @Test
-    void testCreateUser() {
-        User user = new User();
-        user.setName("Esteban");
-
-        when(userDao.create(any(User.class))).thenReturn(user);
-
-        User created = userService.create(user);
-
-        assertNotNull(created);
-        assertEquals("Esteban", created.getName());
-        verify(userDao, times(1)).create(any(User.class));
-    }
-
-    @Test
-    void testFindByIdSuccess() {
-        UUID id = UUID.randomUUID();
-        User user = new User();
-        user.setId(id);
-
-        when(userDao.findById(id)).thenReturn(user);
-
-        User found = userService.findById(id);
-
-        assertNotNull(found);
-        assertEquals(id, found.getId());
-        verify(userDao, times(1)).findById(id);
-    }
-
-    @Test
-    void testFindByIdNotFound() {
-        UUID id = UUID.randomUUID();
-
-        when(userDao.findById(id)).thenReturn(null);
-
-        assertThrows(ResourceNotFoundException.class, () -> userService.findById(id));
-        verify(userDao, times(1)).findById(id);
+        userDao = mock(UserDao.class);
+        service = new UserServiceImpl(userDao);
     }
 
     @Test
     void testFindAll() {
-        User user = new User();
-        user.setName("Usuario prueba");
+        List<User> users = Arrays.asList(new User(), new User());
+        when(userDao.findAll()).thenReturn(users);
 
-        when(userDao.findAll()).thenReturn(List.of(user));
+        List<User> result = service.findAll();
 
-        List<User> users = userService.findAll();
-
-        assertEquals(1, users.size());
-        assertEquals("Usuario prueba", users.get(0).getName());
+        assertEquals(2, result.size());
         verify(userDao, times(1)).findAll();
     }
 
     @Test
-    void testUpdateUserSuccess() {
+    void testFindByIdFound() {
         UUID id = UUID.randomUUID();
         User user = new User();
         user.setId(id);
-        user.setName("Original");
+        when(userDao.findById(id)).thenReturn(user);
 
-        when(userDao.update(id, user)).thenReturn(user);
+        User result = service.findById(id);
 
-        User updated = userService.update(id, user);
+        assertNotNull(result);
+        assertEquals(id, result.getId());
+        verify(userDao, times(1)).findById(id);
+    }
 
-        assertNotNull(updated);
-        assertEquals("Original", updated.getName());
+    @Test
+    void testFindByIdNotFoundThrowsException() {
+        UUID id = UUID.randomUUID();
+        when(userDao.findById(id)).thenReturn(null);
+
+        assertThrows(ResourceNotFoundException.class, () -> service.findById(id));
+        verify(userDao, times(1)).findById(id);
+    }
+
+    @Test
+    void testCreateGeneratesIdIfNull() {
+        User user = new User();
+        when(userDao.create(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        User result = service.create(user);
+
+        assertNotNull(result.getId());
+        verify(userDao, times(1)).create(user);
+    }
+
+    @Test
+    void testCreateWithExistingId() {
+        User user = new User();
+        user.setId(UUID.randomUUID());
+        when(userDao.create(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        User result = service.create(user);
+
+        assertEquals(user.getId(), result.getId());
+        verify(userDao, times(1)).create(user);
+    }
+
+    @Test
+    void testUpdateExisting() {
+        UUID id = UUID.randomUUID();
+        User user = new User();
+        user.setId(id);
+
+        when(userDao.update(eq(id), any(User.class))).thenReturn(user);
+
+        User result = service.update(id, user);
+
+        assertEquals(id, result.getId());
         verify(userDao, times(1)).update(id, user);
     }
 
     @Test
-    void testUpdateUserNotFound() {
+    void testUpdateNotFoundThrowsException() {
         UUID id = UUID.randomUUID();
         User user = new User();
 
-        when(userDao.update(id, user)).thenReturn(null);
+        when(userDao.update(eq(id), any(User.class))).thenReturn(null);
 
-        assertThrows(ResourceNotFoundException.class, () -> userService.update(id, user));
+        assertThrows(ResourceNotFoundException.class, () -> service.update(id, user));
         verify(userDao, times(1)).update(id, user);
     }
 
     @Test
-    void testDeleteUser() {
+    void testDelete() {
         UUID id = UUID.randomUUID();
 
-        doNothing().when(userDao).delete(id);
-
-        userService.delete(id);
+        service.delete(id);
 
         verify(userDao, times(1)).delete(id);
     }
