@@ -5,7 +5,9 @@ import com.cajaviva.cajaviva.utilities.Conexion;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import javax.sql.DataSource;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,7 +25,7 @@ class UserDaoTest {
         private final Connection connection;
 
         public StubConexion(Connection connection) {
-            super();
+            super(mock(DataSource.class));
             this.connection = connection;
         }
 
@@ -52,6 +54,7 @@ class UserDaoTest {
         when(rs.next()).thenReturn(true, true, false);
         when(rs.getString("id")).thenReturn(UUID.randomUUID().toString(), UUID.randomUUID().toString());
         when(rs.getString("name")).thenReturn("Alice", "Bob");
+        when(rs.getString("last_name")).thenReturn("A", "B");
         when(rs.getString("email")).thenReturn("alice@test.com", "bob@test.com");
 
         List<User> result = userDao.findAll();
@@ -68,6 +71,7 @@ class UserDaoTest {
         when(rs.next()).thenReturn(true);
         when(rs.getString("id")).thenReturn(id.toString());
         when(rs.getString("name")).thenReturn("Charlie");
+        when(rs.getString("last_name")).thenReturn("C");
         when(rs.getString("email")).thenReturn("charlie@test.com");
 
         User result = userDao.findById(id);
@@ -91,7 +95,12 @@ class UserDaoTest {
     void testCreateGeneratesIdIfNull() throws Exception {
         User user = new User();
         user.setName("David");
+        user.setLastName("Miller");
         user.setEmail("david@test.com");
+        user.setPasswordDigest("hash");
+        user.setActive(true);
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
 
         User result = userDao.create(user);
 
@@ -105,7 +114,11 @@ class UserDaoTest {
         UUID id = UUID.randomUUID();
         User user = new User();
         user.setName("Eva");
+        user.setLastName("Stone");
         user.setEmail("eva@test.com");
+        user.setPasswordDigest("hash2");
+        user.setActive(true);
+        user.setUpdatedAt(LocalDateTime.now());
 
         User result = userDao.update(id, user);
 

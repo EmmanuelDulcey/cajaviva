@@ -1,20 +1,36 @@
 package com.cajaviva.cajaviva.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public class User {
+@Entity
+@Table(name = "users")
+public class AuthUser {
 
+    @Id
     private UUID id;
+
+    @Column(name = "name", nullable = false)
     private String name;
-    private String lastName;
+
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
-    @JsonIgnore
+
+    @Column(name = "password_digest", nullable = false)
     private String passwordDigest;
+
+    @Column(name = "active", nullable = false)
     private boolean active;
+
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     public UUID getId() {
@@ -31,14 +47,6 @@ public class User {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
     }
 
     public String getEmail() {

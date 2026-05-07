@@ -8,9 +8,10 @@ import java.sql.Connection;
 @Component
 public class Conexion {
 
-    private DataSource dataSource = null;
+    private final DataSource dataSource;
 
-    public Conexion() {
+    public Conexion(DataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
     public Connection obtenerConexion() throws Exception {

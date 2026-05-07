@@ -5,6 +5,7 @@ import com.cajaviva.cajaviva.repository.JPA.UserAccessRepository;
 import com.cajaviva.cajaviva.service.UserAccessService;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,11 +30,18 @@ public class UserAccessServiceImpl implements UserAccessService {
 
     @Override
     public UserAccess create(UserAccess userAccess) {
+        userAccess.setCreatedAt(LocalDateTime.now());
         return repository.save(userAccess);
     }
 
     @Override
     public UserAccess update(UUID id, UserAccess userAccess) {
+        UserAccess existing = findById(id);
+        if (existing != null && existing.getCreatedAt() != null) {
+            userAccess.setCreatedAt(existing.getCreatedAt());
+        } else if (userAccess.getCreatedAt() == null) {
+            userAccess.setCreatedAt(LocalDateTime.now());
+        }
         userAccess.setId(id);
         return repository.save(userAccess);
     }
@@ -44,17 +52,12 @@ public class UserAccessServiceImpl implements UserAccessService {
     }
 
     @Override
-    public List<UserAccess> findByPersonId(UUID personId) {
-        return repository.findByPersonId(personId);
-    }
-
-    @Override
     public List<UserAccess> findByAccountId(UUID accountId) {
         return repository.findByAccountId(accountId);
     }
 
     @Override
-    public List<UserAccess> findByRole(String role) {
+    public List<UserAccess> findByRole(Integer role) {
         return repository.findByRole(role);
     }
 
