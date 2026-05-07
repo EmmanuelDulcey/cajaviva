@@ -8,6 +8,7 @@ import com.cajaviva.cajaviva.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -61,6 +62,10 @@ class UserServiceTest {
     @Test
     void testCreateGeneratesIdIfNull() {
         User user = new User();
+        user.setName("Test");
+        user.setLastName("User");
+        user.setEmail("test@correo.com");
+        user.setPasswordDigest("hash");
         when(userDao.create(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         User result = service.create(user);
@@ -73,6 +78,10 @@ class UserServiceTest {
     void testCreateWithExistingId() {
         User user = new User();
         user.setId(UUID.randomUUID());
+        user.setName("Test");
+        user.setLastName("User");
+        user.setEmail("test@correo.com");
+        user.setPasswordDigest("hash");
         when(userDao.create(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         User result = service.create(user);
@@ -84,26 +93,36 @@ class UserServiceTest {
     @Test
     void testUpdateExisting() {
         UUID id = UUID.randomUUID();
+        User existing = new User();
+        existing.setId(id);
+        existing.setPasswordDigest("existing-hash");
+        existing.setCreatedAt(LocalDateTime.now().minusDays(1));
+        existing.setActive(true);
+
         User user = new User();
         user.setId(id);
+        user.setName("Updated");
+        user.setEmail("updated@correo.com");
 
+        when(userDao.findById(id)).thenReturn(existing);
         when(userDao.update(eq(id), any(User.class))).thenReturn(user);
 
         User result = service.update(id, user);
 
         assertEquals(id, result.getId());
-        verify(userDao, times(1)).update(id, user);
+        verify(userDao, times(1)).findById(id);
+        verify(userDao, times(1)).update(eq(id), any(User.class));
     }
 
     @Test
     void testUpdateNotFoundThrowsException() {
         UUID id = UUID.randomUUID();
         User user = new User();
-
-        when(userDao.update(eq(id), any(User.class))).thenReturn(null);
+        when(userDao.findById(id)).thenReturn(null);
 
         assertThrows(ResourceNotFoundException.class, () -> service.update(id, user));
-        verify(userDao, times(1)).update(id, user);
+        verify(userDao, times(1)).findById(id);
+        verify(userDao, never()).update(eq(id), any(User.class));
     }
 
     @Test

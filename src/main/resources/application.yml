@@ -9,7 +9,7 @@ spring:
   mvc:
     throw-exception-if-no-handler-found: true
   profiles:
-    active: h2
+    active: sqlserver
 
 springdoc:
   api-docs:
@@ -17,6 +17,19 @@ springdoc:
     path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+security:
+  jwt:
+    issuer: cajaviva
+    audience: cajaviva-api
+    access-ttl-minutes: 15
+    refresh-ttl-days: 7
+    signing-key: ${JWT_SIGNING_KEY:01234567890123456789012345678901}
+  cookie:
+    domain: ""
+    secure: false
+    same-site: Lax
+    path: /
 
 ---
 
@@ -40,6 +53,10 @@ spring:
     hibernate:
       ddl-auto: create-drop
     show-sql: true
+    properties:
+      hibernate:
+        bytecode:
+          provider: none
 
   flyway:
     enabled: false
@@ -65,9 +82,13 @@ spring:
     hibernate:
       ddl-auto: none
     show-sql: true
+    properties:
+      hibernate:
+        bytecode:
+          provider: none
 
   flyway:
-    enabled: false
+    enabled: true
 
   web:
     resources:

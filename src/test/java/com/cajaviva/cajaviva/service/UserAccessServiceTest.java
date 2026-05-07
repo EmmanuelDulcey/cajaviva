@@ -73,14 +73,18 @@ class UserAccessServiceTest {
     @Test
     void testUpdate() {
         UUID id = UUID.randomUUID();
+        UserAccess existing = new UserAccess();
+        existing.setId(id);
         UserAccess access = new UserAccess();
         access.setId(id);
 
+        when(repository.findById(id)).thenReturn(Optional.of(existing));
         when(repository.save(any(UserAccess.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         UserAccess result = service.update(id, access);
 
         assertEquals(id, result.getId());
+        verify(repository, times(1)).findById(id);
         verify(repository, times(1)).save(access);
     }
 
@@ -91,18 +95,6 @@ class UserAccessServiceTest {
         service.delete(id);
 
         verify(repository, times(1)).deleteById(id);
-    }
-
-    @Test
-    void testFindByPersonId() {
-        UUID personId = UUID.randomUUID();
-        List<UserAccess> accesses = Arrays.asList(new UserAccess(), new UserAccess());
-        when(repository.findByPersonId(personId)).thenReturn(accesses);
-
-        List<UserAccess> result = service.findByPersonId(personId);
-
-        assertEquals(2, result.size());
-        verify(repository, times(1)).findByPersonId(personId);
     }
 
     @Test
@@ -119,7 +111,7 @@ class UserAccessServiceTest {
 
     @Test
     void testFindByRole() {
-        String role = "ADMIN";
+        Integer role = 1;
         List<UserAccess> accesses = Arrays.asList(new UserAccess(), new UserAccess());
         when(repository.findByRole(role)).thenReturn(accesses);
 

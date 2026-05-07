@@ -48,7 +48,7 @@ public class UserAccessController {
         description = "Crea un nuevo UserAccess",
         requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
             content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = UserAccess.class),
-            examples = { @io.swagger.v3.oas.annotations.media.ExampleObject(value = "{\n  \"personId\": \"...\", \"accountId\": \"...\", \"role\": \"MANAGER\", \"userId\": \"...\"\n}") })
+            examples = { @io.swagger.v3.oas.annotations.media.ExampleObject(value = "{\n  \"accountId\": \"...\", \"role\": 1, \"userId\": \"...\"\n}") })
         ),
         responses = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Creado",
@@ -85,7 +85,7 @@ public class UserAccessController {
         },
         requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
             content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = UserAccess.class),
-            examples = { @io.swagger.v3.oas.annotations.media.ExampleObject(value = "{\n  \"personId\": \"...\", \"accountId\": \"...\", \"role\": \"OWNER\", \"userId\": \"...\"\n}") })
+            examples = { @io.swagger.v3.oas.annotations.media.ExampleObject(value = "{\n  \"accountId\": \"...\", \"role\": 2, \"userId\": \"...\"\n}") })
         ),
         responses = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Actualizado",
