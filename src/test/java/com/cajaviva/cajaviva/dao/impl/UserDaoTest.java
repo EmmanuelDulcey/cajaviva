@@ -13,29 +13,42 @@ import static org.mockito.Mockito.*;
 
 class UserDaoTest {
 
-    private Conexion conexion;
     private Connection connection;
     private PreparedStatement stmt;
     private ResultSet rs;
     private UserDaoImpl userDao;
 
+    // StubConexion que devuelve el Connection mock
+    static class StubConexion extends Conexion {
+        private final Connection connection;
+
+        public StubConexion(Connection connection) {
+            super();
+            this.connection = connection;
+        }
+
+        @Override
+        public Connection obtenerConexion() {
+            return connection;
+        }
+    }
+
     @BeforeEach
     void setUp() throws Exception {
-        conexion = mock(Conexion.class);
+        // Ahora sí podemos usar mocks normales gracias a mock-maker-inline
         connection = mock(Connection.class);
         stmt = mock(PreparedStatement.class);
         rs = mock(ResultSet.class);
 
-        when(conexion.obtenerConexion()).thenReturn(connection);
+        when(connection.prepareStatement(anyString())).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(rs);
 
-        userDao = new UserDaoImpl(conexion);
+        StubConexion stubConexion = new StubConexion(connection);
+        userDao = new UserDaoImpl(stubConexion);
     }
 
     @Test
     void testFindAllReturnsUsers() throws Exception {
-        when(connection.prepareStatement(anyString())).thenReturn(stmt);
-        when(stmt.executeQuery()).thenReturn(rs);
-
         when(rs.next()).thenReturn(true, true, false);
         when(rs.getString("id")).thenReturn(UUID.randomUUID().toString(), UUID.randomUUID().toString());
         when(rs.getString("name")).thenReturn("Alice", "Bob");
@@ -52,9 +65,6 @@ class UserDaoTest {
     @Test
     void testFindByIdFound() throws Exception {
         UUID id = UUID.randomUUID();
-        when(connection.prepareStatement(anyString())).thenReturn(stmt);
-        when(stmt.executeQuery()).thenReturn(rs);
-
         when(rs.next()).thenReturn(true);
         when(rs.getString("id")).thenReturn(id.toString());
         when(rs.getString("name")).thenReturn("Charlie");
@@ -70,9 +80,6 @@ class UserDaoTest {
     @Test
     void testFindByIdNotFoundReturnsNull() throws Exception {
         UUID id = UUID.randomUUID();
-        when(connection.prepareStatement(anyString())).thenReturn(stmt);
-        when(stmt.executeQuery()).thenReturn(rs);
-
         when(rs.next()).thenReturn(false);
 
         User result = userDao.findById(id);
@@ -85,8 +92,6 @@ class UserDaoTest {
         User user = new User();
         user.setName("David");
         user.setEmail("david@test.com");
-
-        when(connection.prepareStatement(anyString())).thenReturn(stmt);
 
         User result = userDao.create(user);
 
@@ -102,8 +107,6 @@ class UserDaoTest {
         user.setName("Eva");
         user.setEmail("eva@test.com");
 
-        when(connection.prepareStatement(anyString())).thenReturn(stmt);
-
         User result = userDao.update(id, user);
 
         assertEquals(id, result.getId());
@@ -114,7 +117,6 @@ class UserDaoTest {
     @Test
     void testDelete() throws Exception {
         UUID id = UUID.randomUUID();
-        when(connection.prepareStatement(anyString())).thenReturn(stmt);
 
         userDao.delete(id);
 
