@@ -4,187 +4,181 @@ import com.cajaviva.cajaviva.entity.RecurrentTransaction;
 import com.cajaviva.cajaviva.entity.Account;
 import com.cajaviva.cajaviva.entity.Category;
 import com.cajaviva.cajaviva.repository.JPA.RecurrentTransactionRepository;
+import com.cajaviva.cajaviva.exception.ResourceNotFoundException;
 import com.cajaviva.cajaviva.service.impl.RecurrentTransactionServiceImpl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
-import java.util.Optional;
-import java.util.UUID;
-import java.util.List;
-import java.math.BigDecimal;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class RecurrentTransactionServiceTest {
 
-    private RecurrentTransactionRepository recurrentTransactionRepository;
-    private RecurrentTransactionService recurrentTransactionService;
+    private RecurrentTransactionRepository repository;
+    private RecurrentTransactionServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        recurrentTransactionRepository = Mockito.mock(RecurrentTransactionRepository.class);
-        recurrentTransactionService = new RecurrentTransactionServiceImpl(recurrentTransactionRepository);
-    }
-
-    @Test
-    void testCreateRecurrentTransaction() {
-        RecurrentTransaction tx = new RecurrentTransaction();
-        tx.setAmount(BigDecimal.valueOf(1000));
-
-        when(recurrentTransactionRepository.save(tx)).thenReturn(tx);
-
-        RecurrentTransaction created = recurrentTransactionService.create(tx);
-
-        assertNotNull(created);
-        assertEquals(BigDecimal.valueOf(1000), created.getAmount());
-        verify(recurrentTransactionRepository, times(1)).save(tx);
-    }
-
-    @Test
-    void testFindById() {
-        UUID id = UUID.randomUUID();
-        RecurrentTransaction tx = new RecurrentTransaction();
-        tx.setId(id);
-
-        when(recurrentTransactionRepository.findById(id)).thenReturn(Optional.of(tx));
-
-        RecurrentTransaction found = recurrentTransactionService.findById(id);
-
-        assertNotNull(found);
-        assertEquals(id, found.getId());
-        verify(recurrentTransactionRepository, times(1)).findById(id);
+        repository = mock(RecurrentTransactionRepository.class);
+        service = new RecurrentTransactionServiceImpl(repository);
     }
 
     @Test
     void testFindAll() {
-        RecurrentTransaction tx = new RecurrentTransaction();
-        tx.setAmount(BigDecimal.valueOf(500));
+        List<RecurrentTransaction> transactions = Arrays.asList(new RecurrentTransaction(), new RecurrentTransaction());
+        when(repository.findAll()).thenReturn(transactions);
 
-        when(recurrentTransactionRepository.findAll()).thenReturn(List.of(tx));
+        List<RecurrentTransaction> result = service.findAll();
 
-        List<RecurrentTransaction> transactions = recurrentTransactionService.findAll();
-
-        assertEquals(1, transactions.size());
-        assertEquals(BigDecimal.valueOf(500), transactions.get(0).getAmount());
-        verify(recurrentTransactionRepository, times(1)).findAll();
+        assertEquals(2, result.size());
+        verify(repository, times(1)).findAll();
     }
 
     @Test
-    void testUpdateRecurrentTransaction() {
+    void testFindByIdFound() {
         UUID id = UUID.randomUUID();
         RecurrentTransaction tx = new RecurrentTransaction();
         tx.setId(id);
-        tx.setAmount(BigDecimal.valueOf(200));
+        when(repository.findById(id)).thenReturn(Optional.of(tx));
 
-        when(recurrentTransactionRepository.findById(id)).thenReturn(Optional.of(tx));
-        when(recurrentTransactionRepository.save(any(RecurrentTransaction.class))).thenReturn(tx);
+        RecurrentTransaction result = service.findById(id);
 
-        RecurrentTransaction updated = recurrentTransactionService.update(id, tx);
-
-        assertNotNull(updated);
-        assertEquals(BigDecimal.valueOf(200), updated.getAmount());
-        verify(recurrentTransactionRepository, times(1)).save(any(RecurrentTransaction.class));
+        assertNotNull(result);
+        assertEquals(id, result.getId());
+        verify(repository, times(1)).findById(id);
     }
 
     @Test
-    void testDeleteRecurrentTransaction() {
+    void testFindByIdNotFoundThrowsException() {
+        UUID id = UUID.randomUUID();
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> service.findById(id));
+        verify(repository, times(1)).findById(id);
+    }
+
+    @Test
+    void testCreate() {
+        RecurrentTransaction tx = new RecurrentTransaction();
+        when(repository.save(any(RecurrentTransaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        RecurrentTransaction result = service.create(tx);
+
+        assertNotNull(result);
+        verify(repository, times(1)).save(tx);
+    }
+
+    @Test
+    void testUpdateExisting() {
+        UUID id = UUID.randomUUID();
+        RecurrentTransaction existing = new RecurrentTransaction();
+        existing.setId(id);
+
+        RecurrentTransaction updateData = new RecurrentTransaction();
+        updateData.setAmount(new java.math.BigDecimal("500"));
+
+        when(repository.findById(id)).thenReturn(Optional.of(existing));
+        when(repository.save(any(RecurrentTransaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        RecurrentTransaction result = service.update(id, updateData);
+
+        assertEquals(new java.math.BigDecimal("500"), result.getAmount());
+        verify(repository, times(1)).findById(id);
+        verify(repository, times(1)).save(existing);
+    }
+
+    @Test
+    void testUpdateNotFoundThrowsException() {
+        UUID id = UUID.randomUUID();
+        RecurrentTransaction updateData = new RecurrentTransaction();
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> service.update(id, updateData));
+        verify(repository, times(1)).findById(id);
+        verify(repository, never()).save(any(RecurrentTransaction.class));
+    }
+
+    @Test
+    void testDelete() {
         UUID id = UUID.randomUUID();
 
-        doNothing().when(recurrentTransactionRepository).deleteById(id);
+        service.delete(id);
 
-        recurrentTransactionService.delete(id);
-
-        verify(recurrentTransactionRepository, times(1)).deleteById(id);
+        verify(repository, times(1)).deleteById(id);
     }
 
     @Test
     void testFindByAccount() {
         Account account = new Account();
-        account.setId(UUID.randomUUID());
-        RecurrentTransaction tx = new RecurrentTransaction();
-        tx.setAccount(account);
+        List<RecurrentTransaction> transactions = Arrays.asList(new RecurrentTransaction(), new RecurrentTransaction());
+        when(repository.findByAccount(account)).thenReturn(transactions);
 
-        when(recurrentTransactionRepository.findByAccount(account)).thenReturn(List.of(tx));
+        List<RecurrentTransaction> result = service.findByAccount(account);
 
-        List<RecurrentTransaction> transactions = recurrentTransactionService.findByAccount(account);
-
-        assertEquals(1, transactions.size());
-        assertEquals(account, transactions.get(0).getAccount());
-        verify(recurrentTransactionRepository, times(1)).findByAccount(account);
+        assertEquals(2, result.size());
+        verify(repository, times(1)).findByAccount(account);
     }
 
     @Test
     void testFindByCategory() {
         Category category = new Category();
-        category.setId(UUID.randomUUID());
-        RecurrentTransaction tx = new RecurrentTransaction();
-        tx.setCategory(category);
+        List<RecurrentTransaction> transactions = Arrays.asList(new RecurrentTransaction(), new RecurrentTransaction());
+        when(repository.findByCategory(category)).thenReturn(transactions);
 
-        when(recurrentTransactionRepository.findByCategory(category)).thenReturn(List.of(tx));
+        List<RecurrentTransaction> result = service.findByCategory(category);
 
-        List<RecurrentTransaction> transactions = recurrentTransactionService.findByCategory(category);
-
-        assertEquals(1, transactions.size());
-        assertEquals(category, transactions.get(0).getCategory());
-        verify(recurrentTransactionRepository, times(1)).findByCategory(category);
+        assertEquals(2, result.size());
+        verify(repository, times(1)).findByCategory(category);
     }
 
     @Test
     void testFindByStatus() {
-        RecurrentTransaction tx = new RecurrentTransaction();
-        tx.setStatus(1);
+        Integer status = 1;
+        List<RecurrentTransaction> transactions = Arrays.asList(new RecurrentTransaction(), new RecurrentTransaction());
+        when(repository.findByStatus(status)).thenReturn(transactions);
 
-        when(recurrentTransactionRepository.findByStatus(1)).thenReturn(List.of(tx));
+        List<RecurrentTransaction> result = service.findByStatus(status);
 
-        List<RecurrentTransaction> transactions = recurrentTransactionService.findByStatus(1);
-
-        assertEquals(1, transactions.size());
-        assertEquals(1, transactions.get(0).getStatus());
-        verify(recurrentTransactionRepository, times(1)).findByStatus(1);
+        assertEquals(2, result.size());
+        verify(repository, times(1)).findByStatus(status);
     }
 
     @Test
     void testFindByFrequency() {
-        RecurrentTransaction tx = new RecurrentTransaction();
-        tx.setFrequency(30);
+        Integer frequency = 30;
+        List<RecurrentTransaction> transactions = Arrays.asList(new RecurrentTransaction(), new RecurrentTransaction());
+        when(repository.findByFrequency(frequency)).thenReturn(transactions);
 
-        when(recurrentTransactionRepository.findByFrequency(30)).thenReturn(List.of(tx));
+        List<RecurrentTransaction> result = service.findByFrequency(frequency);
 
-        List<RecurrentTransaction> transactions = recurrentTransactionService.findByFrequency(30);
-
-        assertEquals(1, transactions.size());
-        assertEquals(30, transactions.get(0).getFrequency());
-        verify(recurrentTransactionRepository, times(1)).findByFrequency(30);
+        assertEquals(2, result.size());
+        verify(repository, times(1)).findByFrequency(frequency);
     }
 
     @Test
     void testFindByCustomFrequency() {
-        RecurrentTransaction tx = new RecurrentTransaction();
-        tx.setCustomFrequency(7);
+        Integer customFrequency = 45;
+        List<RecurrentTransaction> transactions = Arrays.asList(new RecurrentTransaction(), new RecurrentTransaction());
+        when(repository.findByCustomFrequency(customFrequency)).thenReturn(transactions);
 
-        when(recurrentTransactionRepository.findByCustomFrequency(7)).thenReturn(List.of(tx));
+        List<RecurrentTransaction> result = service.findByCustomFrequency(customFrequency);
 
-        List<RecurrentTransaction> transactions = recurrentTransactionService.findByCustomFrequency(7);
-
-        assertEquals(1, transactions.size());
-        assertEquals(7, transactions.get(0).getCustomFrequency());
-        verify(recurrentTransactionRepository, times(1)).findByCustomFrequency(7);
+        assertEquals(2, result.size());
+        verify(repository, times(1)).findByCustomFrequency(customFrequency);
     }
 
     @Test
     void testFindByAccountId() {
         UUID accountId = UUID.randomUUID();
-        RecurrentTransaction tx = new RecurrentTransaction();
-        tx.setId(UUID.randomUUID());
+        List<RecurrentTransaction> transactions = Arrays.asList(new RecurrentTransaction(), new RecurrentTransaction());
+        when(repository.findByAccount_Id(accountId)).thenReturn(transactions);
 
-        when(recurrentTransactionRepository.findByAccount_Id(accountId)).thenReturn(List.of(tx));
+        List<RecurrentTransaction> result = service.findByAccountId(accountId);
 
-        List<RecurrentTransaction> transactions = recurrentTransactionService.findByAccountId(accountId);
-
-        assertEquals(1, transactions.size());
-        verify(recurrentTransactionRepository, times(1)).findByAccount_Id(accountId);
+        assertEquals(2, result.size());
+        verify(repository, times(1)).findByAccount_Id(accountId);
     }
 }

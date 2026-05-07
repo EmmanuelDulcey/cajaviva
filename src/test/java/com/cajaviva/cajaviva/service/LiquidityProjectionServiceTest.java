@@ -3,146 +3,146 @@ package com.cajaviva.cajaviva.service;
 import com.cajaviva.cajaviva.entity.LiquidityProjection;
 import com.cajaviva.cajaviva.entity.Account;
 import com.cajaviva.cajaviva.repository.JPA.LiquidityProjectionRepository;
+import com.cajaviva.cajaviva.exception.ResourceNotFoundException;
 import com.cajaviva.cajaviva.service.impl.LiquidityProjectionServiceImpl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
-import java.util.Optional;
-import java.util.UUID;
-import java.util.List;
-import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class LiquidityProjectionServiceTest {
 
-    private LiquidityProjectionRepository projectionRepository;
-    private LiquidityProjectionService projectionService;
+    private LiquidityProjectionRepository repository;
+    private LiquidityProjectionServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        projectionRepository = Mockito.mock(LiquidityProjectionRepository.class);
-        projectionService = new LiquidityProjectionServiceImpl(projectionRepository);
-    }
-
-    @Test
-    void testCreateProjection() {
-        LiquidityProjection projection = new LiquidityProjection();
-        projection.setProjectedBalance(BigDecimal.valueOf(1500));
-        projection.setProjectionDate(LocalDate.now());
-
-        when(projectionRepository.save(projection)).thenReturn(projection);
-
-        LiquidityProjection created = projectionService.create(projection);
-
-        assertNotNull(created);
-        assertEquals(BigDecimal.valueOf(1500), created.getProjectedBalance());
-        verify(projectionRepository, times(1)).save(projection);
-    }
-
-    @Test
-    void testFindById() {
-        UUID id = UUID.randomUUID();
-        LiquidityProjection projection = new LiquidityProjection();
-        projection.setId(id);
-
-        when(projectionRepository.findById(id)).thenReturn(Optional.of(projection));
-
-        LiquidityProjection found = projectionService.findById(id);
-
-        assertNotNull(found);
-        assertEquals(id, found.getId());
-        verify(projectionRepository, times(1)).findById(id);
+        repository = mock(LiquidityProjectionRepository.class);
+        service = new LiquidityProjectionServiceImpl(repository);
     }
 
     @Test
     void testFindAll() {
-        LiquidityProjection projection = new LiquidityProjection();
-        projection.setProjectedBalance(BigDecimal.valueOf(2000));
+        List<LiquidityProjection> projections = Arrays.asList(new LiquidityProjection(), new LiquidityProjection());
+        when(repository.findAll()).thenReturn(projections);
 
-        when(projectionRepository.findAll()).thenReturn(List.of(projection));
+        List<LiquidityProjection> result = service.findAll();
 
-        List<LiquidityProjection> projections = projectionService.findAll();
-
-        assertEquals(1, projections.size());
-        assertEquals(BigDecimal.valueOf(2000), projections.get(0).getProjectedBalance());
-        verify(projectionRepository, times(1)).findAll();
+        assertEquals(2, result.size());
+        verify(repository, times(1)).findAll();
     }
 
     @Test
-    void testUpdateProjection() {
+    void testFindByIdFound() {
         UUID id = UUID.randomUUID();
         LiquidityProjection projection = new LiquidityProjection();
         projection.setId(id);
-        projection.setProjectedBalance(BigDecimal.valueOf(500));
+        when(repository.findById(id)).thenReturn(Optional.of(projection));
 
-        when(projectionRepository.findById(id)).thenReturn(Optional.of(projection));
-        when(projectionRepository.save(any(LiquidityProjection.class))).thenReturn(projection);
+        LiquidityProjection result = service.findById(id);
 
-        LiquidityProjection updated = projectionService.update(id, projection);
-
-        assertNotNull(updated);
-        assertEquals(BigDecimal.valueOf(500), updated.getProjectedBalance());
-        verify(projectionRepository, times(1)).save(any(LiquidityProjection.class));
+        assertNotNull(result);
+        assertEquals(id, result.getId());
+        verify(repository, times(1)).findById(id);
     }
 
     @Test
-    void testDeleteProjection() {
+    void testFindByIdNotFoundThrowsException() {
+        UUID id = UUID.randomUUID();
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> service.findById(id));
+        verify(repository, times(1)).findById(id);
+    }
+
+    @Test
+    void testCreate() {
+        LiquidityProjection projection = new LiquidityProjection();
+        when(repository.save(any(LiquidityProjection.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        LiquidityProjection result = service.create(projection);
+
+        assertNotNull(result);
+        verify(repository, times(1)).save(projection);
+    }
+
+    @Test
+    void testUpdateExisting() {
+        UUID id = UUID.randomUUID();
+        LiquidityProjection existing = new LiquidityProjection();
+        existing.setId(id);
+
+        LiquidityProjection updateData = new LiquidityProjection();
+        updateData.setAmount(new java.math.BigDecimal("1000"));
+
+        when(repository.findById(id)).thenReturn(Optional.of(existing));
+        when(repository.save(any(LiquidityProjection.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        LiquidityProjection result = service.update(id, updateData);
+
+        assertEquals(new java.math.BigDecimal("1000"), result.getAmount());
+        verify(repository, times(1)).findById(id);
+        verify(repository, times(1)).save(existing);
+    }
+
+    @Test
+    void testUpdateNotFoundThrowsException() {
+        UUID id = UUID.randomUUID();
+        LiquidityProjection updateData = new LiquidityProjection();
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> service.update(id, updateData));
+        verify(repository, times(1)).findById(id);
+        verify(repository, never()).save(any(LiquidityProjection.class));
+    }
+
+    @Test
+    void testDelete() {
         UUID id = UUID.randomUUID();
 
-        doNothing().when(projectionRepository).deleteById(id);
+        service.delete(id);
 
-        projectionService.delete(id);
-
-        verify(projectionRepository, times(1)).deleteById(id);
+        verify(repository, times(1)).deleteById(id);
     }
 
     @Test
     void testFindByAccount() {
         Account account = new Account();
-        account.setId(UUID.randomUUID());
-        LiquidityProjection projection = new LiquidityProjection();
-        projection.setAccount(account);
+        List<LiquidityProjection> projections = Arrays.asList(new LiquidityProjection(), new LiquidityProjection());
+        when(repository.findByAccount(account)).thenReturn(projections);
 
-        when(projectionRepository.findByAccount(account)).thenReturn(List.of(projection));
+        List<LiquidityProjection> result = service.findByAccount(account);
 
-        List<LiquidityProjection> projections = projectionService.findByAccount(account);
-
-        assertEquals(1, projections.size());
-        assertEquals(account, projections.get(0).getAccount());
-        verify(projectionRepository, times(1)).findByAccount(account);
+        assertEquals(2, result.size());
+        verify(repository, times(1)).findByAccount(account);
     }
 
     @Test
     void testFindByProjectionDate() {
         LocalDate date = LocalDate.now();
-        LiquidityProjection projection = new LiquidityProjection();
-        projection.setProjectionDate(date);
+        List<LiquidityProjection> projections = Arrays.asList(new LiquidityProjection(), new LiquidityProjection());
+        when(repository.findByProjectionDate(date)).thenReturn(projections);
 
-        when(projectionRepository.findByProjectionDate(date)).thenReturn(List.of(projection));
+        List<LiquidityProjection> result = service.findByProjectionDate(date);
 
-        List<LiquidityProjection> projections = projectionService.findByProjectionDate(date);
-
-        assertEquals(1, projections.size());
-        assertEquals(date, projections.get(0).getProjectionDate());
-        verify(projectionRepository, times(1)).findByProjectionDate(date);
+        assertEquals(2, result.size());
+        verify(repository, times(1)).findByProjectionDate(date);
     }
 
     @Test
     void testFindByAccountId() {
         UUID accountId = UUID.randomUUID();
-        LiquidityProjection projection = new LiquidityProjection();
-        projection.setId(UUID.randomUUID());
+        List<LiquidityProjection> projections = Arrays.asList(new LiquidityProjection(), new LiquidityProjection());
+        when(repository.findByAccount_Id(accountId)).thenReturn(projections);
 
-        when(projectionRepository.findByAccount_Id(accountId)).thenReturn(List.of(projection));
+        List<LiquidityProjection> result = service.findByAccountId(accountId);
 
-        List<LiquidityProjection> projections = projectionService.findByAccountId(accountId);
-
-        assertEquals(1, projections.size());
-        verify(projectionRepository, times(1)).findByAccount_Id(accountId);
+        assertEquals(2, result.size());
+        verify(repository, times(1)).findByAccount_Id(accountId);
     }
 }
