@@ -2,149 +2,135 @@ package com.cajaviva.cajaviva.service;
 
 import com.cajaviva.cajaviva.entity.Account;
 import com.cajaviva.cajaviva.repository.JPA.AccountRepository;
-import com.cajaviva.cajaviva.service.impl.AccountServiceImpl; // implementación concreta
 import com.cajaviva.cajaviva.exception.ResourceNotFoundException;
+import com.cajaviva.cajaviva.service.impl.AccountServiceImpl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
-import java.util.Optional;
-import java.util.UUID;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class AccountServiceTest {
 
-    private AccountRepository accountRepository;
-    private AccountService accountService;
+    private AccountRepository repository;
+    private AccountServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        accountRepository = Mockito.mock(AccountRepository.class);
-        accountService = new AccountServiceImpl(accountRepository);
+        repository = mock(AccountRepository.class);
+        service = new AccountServiceImpl(repository);
     }
 
     @Test
-    void testCreateAccount() {
-        Account account = new Account();
-        account.setName("Cuenta prueba");
+    void testFindAll() {
+        List<Account> accounts = Arrays.asList(new Account(), new Account());
+        when(repository.findAll()).thenReturn(accounts);
 
-        when(accountRepository.save(account)).thenReturn(account);
+        List<Account> result = service.findAll();
 
-        Account created = accountService.create(account);
-
-        assertNotNull(created);
-        assertEquals("Cuenta prueba", created.getName());
-        verify(accountRepository, times(1)).save(account);
+        assertEquals(2, result.size());
+        verify(repository, times(1)).findAll();
     }
 
     @Test
-    void testFindByIdSuccess() {
+    void testFindByIdFound() {
         UUID id = UUID.randomUUID();
         Account account = new Account();
         account.setId(id);
+        when(repository.findById(id)).thenReturn(Optional.of(account));
 
-        when(accountRepository.findById(id)).thenReturn(Optional.of(account));
+        Account result = service.findById(id);
 
-        Account found = accountService.findById(id);
-
-        assertNotNull(found);
-        assertEquals(id, found.getId());
-        verify(accountRepository, times(1)).findById(id);
+        assertNotNull(result);
+        assertEquals(id, result.getId());
+        verify(repository, times(1)).findById(id);
     }
 
     @Test
     void testFindByIdNotFound() {
         UUID id = UUID.randomUUID();
+        when(repository.findById(id)).thenReturn(Optional.empty());
 
-        when(accountRepository.findById(id)).thenReturn(Optional.empty());
+        Account result = service.findById(id);
 
-        Account result = accountService.findById(id);
-
-        assertNull(result); // 👈 tu servicio devuelve null
-        verify(accountRepository, times(1)).findById(id);
+        assertNull(result);
+        verify(repository, times(1)).findById(id);
     }
 
     @Test
-    void testFindAll() {
+    void testCreateGeneratesIdAndTimestamps() {
         Account account = new Account();
-        account.setName("Cuenta prueba");
+        when(repository.save(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        when(accountRepository.findAll()).thenReturn(List.of(account));
+        Account result = service.create(account);
 
-        List<Account> accounts = accountService.findAll();
-
-        assertEquals(1, accounts.size());
-        assertEquals("Cuenta prueba", accounts.get(0).getName());
-        verify(accountRepository, times(1)).findAll();
+        assertNotNull(result.getId());
+        assertNotNull(result.getCreatedAt());
+        assertNotNull(result.getUpdatedAt());
+        verify(repository, times(1)).save(result);
     }
 
     @Test
-    void testUpdateAccountSuccess() {
+    void testUpdateExisting() {
         UUID id = UUID.randomUUID();
         Account account = new Account();
-        account.setId(id);
-        account.setName("Cuenta prueba");
+        when(repository.existsById(id)).thenReturn(true);
+        when(repository.save(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        when(accountRepository.existsById(id)).thenReturn(true);
-        when(accountRepository.save(any(Account.class))).thenReturn(account);
+        Account result = service.update(id, account);
 
-        Account updated = accountService.update(id, account);
-
-        assertNotNull(updated);
-        assertEquals("Cuenta prueba", updated.getName());
-        verify(accountRepository, times(1)).save(any(Account.class));
+        assertEquals(id, result.getId());
+        assertNotNull(result.getUpdatedAt());
+        verify(repository, times(1)).existsById(id);
+        verify(repository, times(1)).save(result);
     }
 
     @Test
-    void testUpdateAccountNotFound() {
+    void testUpdateNotExisting() {
         UUID id = UUID.randomUUID();
         Account account = new Account();
+        when(repository.existsById(id)).thenReturn(false);
 
-        when(accountRepository.existsById(id)).thenReturn(false);
+        Account result = service.update(id, account);
 
-        Account result = accountService.update(id, account);
-
-        assertNull(result); // 👈 tu servicio devuelve null
-        verify(accountRepository, times(1)).existsById(id);
+        assertNull(result);
+        verify(repository, times(1)).existsById(id);
+        verify(repository, never()).save(any(Account.class));
     }
 
     @Test
-    void testDeleteAccountSuccess() {
+    void testDeleteExisting() {
         UUID id = UUID.randomUUID();
+        when(repository.existsById(id)).thenReturn(true);
 
-        when(accountRepository.existsById(id)).thenReturn(true);
-        doNothing().when(accountRepository).deleteById(id);
+        service.delete(id);
 
-        accountService.delete(id);
-
-        verify(accountRepository, times(1)).deleteById(id);
+        verify(repository, times(1)).existsById(id);
+        verify(repository, times(1)).deleteById(id);
     }
 
     @Test
-    void testDeleteAccountNotFound() {
+    void testDeleteNotExistingThrowsException() {
         UUID id = UUID.randomUUID();
+        when(repository.existsById(id)).thenReturn(false);
 
-        when(accountRepository.existsById(id)).thenReturn(false);
-
-        assertThrows(ResourceNotFoundException.class, () -> accountService.delete(id));
-        verify(accountRepository, times(1)).existsById(id);
+        assertThrows(ResourceNotFoundException.class, () -> service.delete(id));
+        verify(repository, times(1)).existsById(id);
+        verify(repository, never()).deleteById(id);
     }
 
     @Test
     void testFindByUserId() {
         UUID userId = UUID.randomUUID();
-        Account account = new Account();
-        account.setId(UUID.randomUUID());
+        List<Account> accounts = Arrays.asList(new Account(), new Account());
+        when(repository.findByUserId(userId)).thenReturn(accounts);
 
-        when(accountRepository.findByUserId(userId)).thenReturn(List.of(account));
+        List<Account> result = service.findByUserId(userId);
 
-        List<Account> accounts = accountService.findByUserId(userId);
-
-        assertEquals(1, accounts.size());
-        verify(accountRepository, times(1)).findByUserId(userId);
+        assertEquals(2, result.size());
+        verify(repository, times(1)).findByUserId(userId);
     }
 }
