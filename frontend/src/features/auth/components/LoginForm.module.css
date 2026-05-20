@@ -1,0 +1,148 @@
+﻿.form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  padding-left: 1rem;
+  color: #3d4945;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: none;
+}
+
+.fieldGroup input {
+  width: 100%;
+  border: 1px solid #bdc9c3;
+  border-radius: 2rem;
+  background: #ffffff;
+  color: var(--color-text-primary);
+  padding: 1rem;
+  font-size: 1rem;
+  outline: none;
+}
+
+.fieldGroup input::placeholder {
+  color: #bdc9c3;
+}
+
+.fieldGroup input:focus {
+  border-width: 2px;
+  border-color: var(--color-primary);
+}
+
+.passwordInputWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid #bdc9c3;
+  border-radius: 2rem;
+  background: #ffffff;
+  padding: 0 0.8rem 0 0;
+}
+
+.passwordInputWrap input {
+  border: 0;
+  padding-right: 0.5rem;
+}
+
+.passwordInputWrap:focus-within {
+  border-width: 2px;
+  border-color: var(--color-primary);
+}
+
+.eyeButton {
+  border: 0;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0.35rem;
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+}
+
+.eyeButton:hover {
+  background: rgba(47, 160, 132, 0.12);
+}
+
+.eyeButtonActive {
+  background: rgba(47, 160, 132, 0.12);
+}
+
+.eyeButton img {
+  width: 22px;
+  height: 20px;
+}
+
+.forgotPassword {
+  margin-left: auto;
+  margin-top: 0.2rem;
+  border: 0;
+  background: transparent;
+  color: #006954;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.submitButton {
+  margin-top: 0.75rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  min-height: 56px;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.submitButton:hover {
+  background: #1f8f75;
+}
+
+.submitButton:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.footerText {
+  margin: 0;
+  padding-top: 0.5rem;
+  text-align: center;
+  color: #3d4945;
+  font-size: 1rem;
+}
+
+.footerText button {
+  border: 0;
+  background: transparent;
+  color: #006954;
+  font-size: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.error {
+  margin: 0;
+  border-radius: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.9rem;
+  color: #8e2424;
+  background: #fbe6e6;
+}
+

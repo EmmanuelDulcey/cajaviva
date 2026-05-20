@@ -1,0 +1,758 @@
+﻿.page {
+  min-height: 100vh;
+  background: #f0f5f1;
+  display: grid;
+  grid-template-columns: 256px 1fr;
+}
+
+.sidebar {
+  background: #fff;
+  border-radius: 0 2rem 2rem 0;
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.brandBlock {
+  padding: 0 1rem;
+}
+
+.brandIconWrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  display: inline-grid;
+  place-items: center;
+  background: #00846a;
+}
+
+.brandIconWrap img {
+  width: 20px;
+}
+
+.brandBlock h1 {
+  margin: 0.75rem 0 0;
+  font-family: var(--font-heading);
+  color: #006954;
+  font-size: 1.25rem;
+  line-height: 1.4;
+}
+
+.brandBlock p {
+  margin: 0;
+  color: #3d4945;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 0;
+}
+
+.navItem {
+  border: 0;
+  background: transparent;
+  border-radius: 999px;
+  padding: 0.8rem 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #3d4945;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.navItem img {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.navItemActive {
+  background: #95f7bb;
+  color: #007346;
+}
+
+.navItem:hover {
+  background: #e7f2eb;
+}
+
+.newTransactionButton {
+  margin-top: 0;
+  border: 0;
+  border-radius: 999px;
+  min-height: 40px;
+  background: #006954;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.newTransactionButton:hover {
+  background: #005845;
+  transform: translateY(-1px);
+}
+
+.newTransactionButton img {
+  width: 14px;
+  height: 14px;
+}
+
+.sidebarFooter {
+  border-top: 1px solid #dfe4e0;
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: auto;
+}
+
+.footerLink {
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 0.65rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #3d4945;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.footerLink:hover {
+  background: #eef4f0;
+  color: #006954;
+}
+
+.footerLink img {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.content {
+  padding: 1rem 2rem 2.5rem;
+}
+
+.topbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 56px;
+}
+
+.topIconButton {
+  border: 0;
+  background: transparent;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-grid;
+  place-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.topIconButton:hover {
+  background: #e6efe9;
+}
+
+.topIconButton img {
+  width: 16px;
+  height: 20px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: #358170;
+  color: #f4fffa;
+  display: inline-grid;
+  place-items: center;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.greeting h2 {
+  margin: 0;
+  color: #006954;
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  line-height: 1.25;
+}
+
+.greeting p {
+  margin: 0.25rem 0 0;
+  color: #3d4945;
+  font-size: 1rem;
+}
+
+.grid {
+  margin-top: 1.8rem;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  background: #fff;
+  border-radius: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  padding: 1.5rem;
+}
+
+.balanceCard {
+  grid-column: span 9;
+  align-self: stretch;
+  min-height: 0;
+  height: 100%;
+  padding: 2.5rem;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.balanceBlur {
+  position: absolute;
+  width: 256px;
+  height: 256px;
+  border-radius: 999px;
+  right: -80px;
+  top: -80px;
+  background: #00846a;
+  filter: blur(20px);
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+@media (min-width: 1400px) {
+  .balanceBlur {
+    width: 420px;
+    height: 420px;
+    right: -130px;
+    top: -130px;
+    filter: blur(26px);
+    opacity: 0.14;
+  }
+}
+
+.alertCard {
+  grid-column: span 3;
+  background: #95f7bb;
+  aspect-ratio: 1 / 1;
+  min-height: 320px;
+  width: 100%;
+  justify-self: stretch;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 1500px) and (min-width: 1201px) {
+  .balanceCard {
+    grid-column: span 8;
+  }
+
+  .alertCard {
+    grid-column: span 4;
+    min-height: 300px;
+  }
+}
+
+.quickActions {
+  grid-column: span 12;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.quickButton {
+  border: 0;
+  min-height: 98px;
+  background: #fff;
+  border-radius: 1.5rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+.quickButton:hover {
+  background: #f8fbf9;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
+}
+
+.quickIconWrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #00846a;
+}
+
+.quickButton:nth-child(2) .quickIconWrap {
+  background: #95f7bb;
+}
+
+.quickButton:nth-child(3) .quickIconWrap {
+  background: #dfe4e0;
+}
+
+.quickIconWrap img {
+  width: 20px;
+  height: 20px;
+}
+
+.accountsCard {
+  grid-column: span 7;
+}
+
+.liquidityCard {
+  grid-column: span 5;
+}
+
+.transactionsCard {
+  grid-column: span 12;
+}
+
+.cardLabel {
+  margin: 0;
+  color: #6d7a74;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  position: relative;
+  z-index: 1;
+}
+
+.balanceLine {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+  position: relative;
+  z-index: 1;
+}
+
+.balanceLine strong {
+  font-family: var(--font-heading);
+  font-size: 3.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #171d1b;
+  line-height: 1.1;
+}
+
+.balanceLine span {
+  color: #6d7a74;
+  font-size: 1.15rem;
+}
+
+.balanceMeta {
+  margin-top: auto;
+  padding-top: 2.8rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  color: #006954;
+  font-size: 0.9rem;
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
+}
+
+.balanceMeta button,
+.sectionHeader button {
+  border: 0;
+  background: transparent;
+  color: #006954;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.balanceMeta button:hover,
+.sectionHeader button:hover {
+  color: #004f3f;
+}
+
+.balanceTrend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.balanceTrend img {
+  width: 12px;
+  height: 12px;
+}
+
+.balanceDivider {
+  width: 1px;
+  height: 20px;
+  background: #dfe4e0;
+}
+
+.balanceAnalysisButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.balanceAnalysisButton img {
+  width: 6px;
+  height: 10px;
+}
+
+.alertHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.alertIconWrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #ffffff;
+}
+
+.alertChip {
+  background: #fff;
+  color: #006d41;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.alertCard h3 {
+  margin: 1rem 0 0;
+  color: #007346;
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  line-height: 1.4;
+}
+
+.alertCard p {
+  margin: 0.5rem 0 1rem;
+  color: #007346;
+  line-height: 1.4;
+  font-size: 1rem;
+}
+
+.alertCard button {
+  margin-top: auto;
+  width: 100%;
+  border: 0;
+  border-radius: 999px;
+  min-height: 44px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #006d41;
+  background: #fff;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.alertCard button:hover {
+  background: #eef8f3;
+  transform: translateY(-1px);
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sectionHeader h3,
+.liquidityCard h3 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  line-height: 1.4;
+}
+
+.accountsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.accountItem {
+  border-radius: 2rem;
+  background: #fff;
+  padding: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(223, 228, 224, 0.5);
+}
+
+.accountTitle {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.accountSubtitle {
+  margin: 0.55rem 0 0;
+  color: #6d7a74;
+  font-size: 0.875rem;
+}
+
+.accountAmount {
+  margin: 0.3rem 0 0;
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  line-height: 1.3;
+}
+
+.progressTrack {
+  margin-top: 0.8rem;
+  height: 6px;
+  border-radius: 999px;
+  background: #dfe4e0;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: #146858;
+}
+
+.mockChart {
+  margin-top: 1rem;
+  height: 120px;
+  background: linear-gradient(to top, rgba(0, 105, 84, 0.12), rgba(0, 105, 84, 0.02));
+  border-radius: 0.8rem;
+}
+
+.mockChart svg {
+  width: 100%;
+  height: 100%;
+}
+
+.chartLine {
+  fill: none;
+  stroke: #006954;
+  stroke-width: 2;
+}
+
+.liquidityCard p {
+  margin: 0.8rem 0 0;
+  color: #3d4945;
+  font-size: 0.875rem;
+}
+
+.searchAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  transition: color 0.2s ease;
+}
+
+.searchAction:hover {
+  color: #004f3f;
+}
+
+.searchAction img {
+  width: 14px;
+  height: 14px;
+}
+
+.transactionList {
+  margin-top: 1rem;
+}
+
+.transactionRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.95rem 0;
+  border-bottom: 1px solid #dfe4e0;
+  gap: 1rem;
+}
+
+.transactionRow:last-child {
+  border-bottom: 0;
+}
+
+.transactionIdentity {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.transactionIconWrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: #eaefeb;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.transactionIconWrap img {
+  width: 20px;
+  height: 16px;
+}
+
+.transactionTitle {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  line-height: 1.3;
+}
+
+.transactionSubtitle {
+  margin: 0.2rem 0 0;
+  color: #6d7a74;
+  font-size: 0.8125rem;
+}
+
+.transactionAmount {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+
+.positiveAmount {
+  color: #006954;
+}
+
+@media (max-width: 1200px) {
+  .page {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-radius: 0;
+    padding: 1rem;
+    position: static;
+    height: auto;
+  }
+
+  .newTransactionButton {
+    margin-top: 0;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .balanceCard,
+  .alertCard,
+  .quickActions,
+  .accountsCard,
+  .liquidityCard,
+  .transactionsCard {
+    grid-column: auto;
+  }
+
+  .alertCard {
+    aspect-ratio: auto;
+    max-width: none;
+    justify-self: stretch;
+    padding: 1.35rem;
+  }
+
+  .alertCard h3 {
+    font-size: 1.2rem;
+  }
+
+  .alertCard p {
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+
+  .alertCard button {
+    min-height: 44px;
+    font-size: 0.75rem;
+  }
+
+  .balanceCard {
+    min-height: 250px;
+    height: auto;
+    padding: 2rem;
+    align-self: start;
+  }
+
+  .balanceLine strong {
+    font-size: 2.75rem;
+  }
+
+  .balanceMeta {
+    margin-top: 1.8rem;
+    padding-top: 0;
+    font-size: 0.75rem;
+  }
+
+  .balanceMeta button {
+    font-size: 0.75rem;
+  }
+
+  .balanceTrend img {
+    width: 10.667px;
+    height: 10.667px;
+  }
+
+  .balanceDivider {
+    height: 16px;
+  }
+
+  .balanceAnalysisButton img {
+    width: 4.933px;
+    height: 8px;
+  }
+
+  .quickActions {
+    grid-template-columns: 1fr;
+  }
+
+  .accountsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
