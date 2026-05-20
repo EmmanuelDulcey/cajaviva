@@ -1,0 +1,18 @@
+:root {
+  --color-background: #2fa084;
+  --color-surface: #ffffff;
+  --color-text-primary: #1a1c1e;
+  --color-text-secondary: #5f6368;
+  --color-outline: #d7dfdb;
+  --color-primary: #2fa084;
+  --color-primary-dark: #1f6f5f;
+  --color-progress-track: #d9dfdc;
+  --shadow-card: 0 12px 40px rgba(0, 0, 0, 0.08);
+
+  --radius-card: 2rem;
+  --radius-input: 1.125rem;
+  --radius-pill: 9999px;
+
+  --font-heading: 'Manrope', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
