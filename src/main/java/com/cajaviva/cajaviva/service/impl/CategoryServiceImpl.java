@@ -1,6 +1,7 @@
 package com.cajaviva.cajaviva.service.impl;
 
 import com.cajaviva.cajaviva.entity.Category;
+import com.cajaviva.cajaviva.exception.ConflictException;
 import com.cajaviva.cajaviva.repository.JPA.CategoryRepository;
 import com.cajaviva.cajaviva.service.CategoryService;
 import com.cajaviva.cajaviva.exception.ResourceNotFoundException;
@@ -32,16 +33,17 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public Category create(Category category) {
+        ensureUniqueName(category.getName(), null);
         return categoryRepository.save(category);
     }
 
     @Override
     public Category update(UUID id, Category category) {
         Category existing = findById(id);
+        ensureUniqueName(category.getName(), id);
         existing.setName(category.getName());
         existing.setType(category.getType());
         existing.setDescription(category.getDescription());
-        existing.setUpdatedAt(category.getUpdatedAt());
 
         return categoryRepository.save(existing);
     }
@@ -49,5 +51,18 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public void delete(UUID id) {
         categoryRepository.deleteById(id);
+    }
+
+    private void ensureUniqueName(String name, UUID currentCategoryId) {
+        if (name == null || name.isBlank()) {
+            return;
+        }
+
+        categoryRepository.findByNameIgnoreCase(name.trim()).ifPresent(found -> {
+            boolean isSameCategory = currentCategoryId != null && found.getId().equals(currentCategoryId);
+            if (!isSameCategory) {
+                throw new ConflictException("Ya existe una categoria con el nombre '" + name.trim() + "'.");
+            }
+        });
     }
 }
