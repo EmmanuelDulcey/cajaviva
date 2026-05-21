@@ -18,11 +18,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -80,6 +83,15 @@ public class AuthController {
     @ApiResponse(responseCode = "401", description = "No autenticado")
     public ResponseEntity<AuthResponse> me(@AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(authService.me(principal.getUserId()));
+    }
+
+    @GetMapping("/csrf")
+    @Operation(
+            summary = "CSRF token",
+            description = "Emite el token CSRF para clientes SPA autenticados."
+    )
+    public ResponseEntity<Map<String, String>> csrf(CsrfToken csrfToken) {
+        return ResponseEntity.ok(Map.of("token", csrfToken.getToken()));
     }
 
     private String readCookie(HttpServletRequest request, String cookieName) {
