@@ -18,6 +18,8 @@ export function LoginPage({
   onGoToRegister,
   onLoginSuccess,
 }: LoginPageProps) {
+  console.log("LoginPage renderizado ✅"); // <-- agregado
+
   const [showBanner, setShowBanner] = useState(!animateOnMount);
 
   useEffect(() => {

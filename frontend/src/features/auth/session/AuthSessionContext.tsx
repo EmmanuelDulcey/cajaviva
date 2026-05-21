@@ -28,6 +28,13 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
     let cancelled = false;
 
     const bootstrap = async () => {
+      // 🔹 Si estamos en Cypress, fuerza a arrancar desautenticado
+      if (window.Cypress) {
+        setUser(null);
+        setIsBootstrapping(false);
+        return;
+      }
+
       const currentUser = await authSessionService.bootstrap();
       if (!cancelled) {
         setUser(currentUser);
@@ -73,4 +80,3 @@ export function useAuthSession() {
   }
   return context;
 }
-

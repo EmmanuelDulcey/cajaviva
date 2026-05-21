@@ -62,7 +62,7 @@ const transactions: TransactionItem[] = [
 ];
 
 export function AuthenticatedHomePage({ email, onLogout }: AuthenticatedHomePageProps) {
-  const userInitials = email.slice(0, 2).toUpperCase();
+  const userInitials = email ? email.slice(0, 2).toUpperCase() : "";
 
   return (
     <main className={styles.page}>

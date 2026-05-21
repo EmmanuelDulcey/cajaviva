@@ -296,3 +296,74 @@ En la raíz del proyecto:
 ```bash
 mvn clean test 
 mvn -Dtest=NombreDelTest test
+
+### CajaViva - Entregable
+
+## Backend
+- Comando: `mvn spring-boot:run`
+- Puerto: `8080`
+- Variables de entorno:
+  - `JWT_SIGNING_KEY=01234567890123456789012345678901`
+  - `DB_URL=jdbc:sqlserver://localhost:1433;databaseName=CajaViva;encrypt=true;trustServerCertificate=true`
+  - `DB_USER=sa`
+  - `DB_PASS=admin`
+- Credenciales de prueba:
+  - Usuario: `sa`
+  - Contraseña: `admin`
+
+## Frontend
+- Comando: `npm run dev`
+- Puerto: `5173` (por defecto de Vite, confirmar en consola)
+- Variables de entorno:
+  - `VITE_API_BASE_URL=http://localhost:8080/v1`
+
+## Tests de autenticación
+
+El flujo de login está cubierto por Cypress en `cypress/e2e/login.cy.ts`.
+
+Este test valida:
+- Que el formulario de login se renderiza correctamente.
+- Que el usuario puede ingresar credenciales válidas.
+- Que la aplicación redirige al dashboard (`/app`).
+- Que se muestra contenido del dashboard (ej. menú "Inicio").
+
+Para ejecutar el test:
+```bash
+npm run test:e2e
+
+
+## Validación manual CRUDL
+
+Además del login, el proyecto permite validar las operaciones básicas de CRUDL (Crear, Leer, Actualizar, Eliminar, Listar).  
+Sigue estos pasos para reproducirlas:
+
+### 1. Login
+- Abre `http://localhost:5173/`.
+- Ingresa credenciales de prueba (ejemplo: `sample@email.com` / `admin`).
+- Verifica que redirige al dashboard `/app`.
+
+### 2. Listar
+- En el dashboard, revisa el menú lateral (**Inicio**, **Cuentas**, **Transacciones**).
+- Confirma que se muestran registros existentes (ejemplo: transacciones previas).
+
+### 3. Crear
+- Haz clic en el botón verde **Nueva Transacción**.
+- Completa el formulario con datos de prueba.
+- Guarda y confirma que aparece en la lista.
+
+### 4. Editar
+- Selecciona una transacción existente.
+- Modifica un campo (ejemplo: monto o descripción).
+- Guarda y verifica que el cambio se refleja en la lista.
+
+### 5. Eliminar
+- Selecciona una transacción existente.
+- Haz clic en eliminar.
+- Confirma que desaparece de la lista.
+
+---
+
+### Evidencia
+Para completar la validación:
+- Adjunta capturas de cada paso (login, listar, crear, editar, eliminar).
+- Opcional: añade tests Cypress para cubrir al menos una operación CRUDL (ejemplo: crear transacción).
