@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import brandIcon from '../../../assets/branding/brand-Icon.svg';
 import addAccountIcon from '../../../assets/dashboard/add-account-icon.svg';
 import categoriesIcon from '../../../assets/dashboard/categories-icon.svg';
@@ -16,7 +16,10 @@ import logoutSidebarIcon from '../../../assets/sidebar/logout-icon.svg';
 import profileSidebarIcon from '../../../assets/sidebar/profile-icon.svg';
 import projectionsSidebarIcon from '../../../assets/sidebar/projections-icon.svg';
 import transactionsSidebarIcon from '../../../assets/sidebar/transactions-icon.svg';
+import { Skeleton } from '../../../shared/components/skeleton/Skeleton';
 import { CategoriesPage } from '../../categories/pages/CategoriesPage';
+import { dashboardApi } from '../../dashboard/api/dashboardApi';
+import type { DashboardSummary } from '../../dashboard/types/dashboard';
 import styles from './AuthenticatedHomePage.module.css';
 
 type AuthenticatedHomePageProps = {
@@ -26,49 +29,102 @@ type AuthenticatedHomePageProps = {
 
 type AppSection = 'dashboard' | 'categories';
 
-type AccountItem = {
-  id: string;
-  title: string;
-  subtitle: string;
-  amount: string;
-  progress?: number;
-};
+const formatCurrency = (amount: number, currency = 'COP') =>
+  new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 0,
+  }).format(amount);
 
-type TransactionItem = {
-  id: string;
-  title: string;
-  subtitle: string;
-  amount: string;
-  positive?: boolean;
-};
+function DashboardSkeleton() {
+  return (
+    <>
+      <div className={styles.greeting}>
+        <Skeleton className={styles.skeletonGreetingTitle} />
+        <Skeleton className={styles.skeletonGreetingText} />
+      </div>
 
-const accounts: AccountItem[] = [
-  { id: 'debit', title: 'Debito Principal', subtitle: '*** 4589', amount: '$120,000.00' },
-  {
-    id: 'savings',
-    title: 'Fondo Emergencia',
-    subtitle: 'Meta: $50,000.00',
-    amount: '$22,500.00',
-    progress: 45,
-  },
-];
+      <section className={styles.grid} aria-label="Cargando dashboard">
+        <article className={`${styles.card} ${styles.balanceCard}`}>
+          <Skeleton className={styles.skeletonLabel} />
+          <Skeleton className={styles.skeletonBalance} />
+          <Skeleton className={styles.skeletonBalanceMeta} />
+        </article>
 
-const transactions: TransactionItem[] = [
-  { id: '1', title: 'Supermercado El Sol', subtitle: 'Hoy, 14:30 · Tarjeta ****4589', amount: '-$1,250.00' },
-  {
-    id: '2',
-    title: 'Nomina Quincenal',
-    subtitle: 'Ayer · Transferencia SPEI',
-    amount: '+$15,000.00',
-    positive: true,
-  },
-  { id: '3', title: 'Pago de Luz CFE', subtitle: '12 Mar · Debito Automatico', amount: '-$450.00' },
-];
+        <article className={`${styles.card} ${styles.alertCard}`}>
+          <Skeleton className={styles.skeletonIcon} />
+          <Skeleton className={styles.skeletonAlertTitle} />
+          <Skeleton className={styles.skeletonAlertText} />
+          <Skeleton className={styles.skeletonButton} />
+        </article>
+
+        <div className={`${styles.card} ${styles.quickActions}`}>
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Skeleton key={index} className={styles.skeletonQuickAction} />
+          ))}
+        </div>
+
+        <article className={`${styles.card} ${styles.accountsCard}`}>
+          <Skeleton className={styles.skeletonSectionTitle} />
+          <div className={styles.accountsGrid}>
+            {Array.from({ length: 2 }).map((_, index) => (
+              <Skeleton key={index} className={styles.skeletonAccount} />
+            ))}
+          </div>
+        </article>
+
+        <article className={`${styles.card} ${styles.liquidityCard}`}>
+          <Skeleton className={styles.skeletonSectionTitle} />
+          <Skeleton className={styles.skeletonChart} />
+          <Skeleton className={styles.skeletonTextLine} />
+        </article>
+
+        <article className={`${styles.card} ${styles.transactionsCard}`}>
+          <Skeleton className={styles.skeletonSectionTitle} />
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Skeleton key={index} className={styles.skeletonTransaction} />
+          ))}
+        </article>
+      </section>
+    </>
+  );
+}
 
 export function AuthenticatedHomePage({ email, onLogout }: AuthenticatedHomePageProps) {
   const userInitials = email ? email.slice(0, 2).toUpperCase() : "";
-  const userInitials = email.slice(0, 2).toUpperCase();
   const [section, setSection] = useState<AppSection>('dashboard');
+  const [dashboard, setDashboard] = useState<DashboardSummary | null>(null);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [dashboardError, setDashboardError] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadDashboard = async () => {
+      try {
+        setDashboardLoading(true);
+        setDashboardError(false);
+        const data = await dashboardApi.summary();
+        if (isMounted) {
+          setDashboard(data);
+        }
+      } catch {
+        if (isMounted) {
+          setDashboardError(true);
+        }
+      } finally {
+        if (isMounted) {
+          setDashboardLoading(false);
+        }
+      }
+    };
+
+    void loadDashboard();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <main className={styles.page}>
@@ -146,125 +202,175 @@ export function AuthenticatedHomePage({ email, onLogout }: AuthenticatedHomePage
 
         {section === 'dashboard' ? (
           <>
-            <div className={styles.greeting}>
-              <h2>Hola, Ana</h2>
-              <p>Aqui tienes el resumen de tu calma financiera.</p>
-            </div>
+            {dashboardLoading ? <DashboardSkeleton /> : null}
 
-            <section className={styles.grid}>
-              <article className={`${styles.card} ${styles.balanceCard}`}>
-                <div className={styles.balanceBlur} aria-hidden="true" />
-                <p className={styles.cardLabel}>BALANCE TOTAL DISPONIBLE</p>
-                <div className={styles.balanceLine}>
-                  <strong>$142,500.00</strong>
-                  <span>MXN</span>
-                </div>
-                <div className={styles.balanceMeta}>
-                  <span className={styles.balanceTrend}>
-                    <img src={balanceTrendIcon} alt="" aria-hidden="true" />
-                    +4.2% este mes
-                  </span>
-                  <span className={styles.balanceDivider} aria-hidden="true" />
-                  <button type="button" className={styles.balanceAnalysisButton}>
-                    Ver analisis
-                    <img src={balanceChevronIcon} alt="" aria-hidden="true" />
-                  </button>
-                </div>
-              </article>
+            {!dashboardLoading && dashboardError ? (
+              <section className={styles.emptyDashboard}>
+                <h2>No pudimos cargar tu dashboard</h2>
+                <p>Intenta actualizar la pagina en unos segundos.</p>
+              </section>
+            ) : null}
 
-              <article className={`${styles.card} ${styles.alertCard}`}>
-                <div className={styles.alertHeader}>
-                  <span className={styles.alertIconWrap}>
-                    <img src={nextPaymentIcon} alt="" aria-hidden="true" />
-                  </span>
-                  <span className={styles.alertChip}>Alerta</span>
+            {!dashboardLoading && dashboard ? (
+              <>
+                <div className={styles.greeting}>
+                  <h2>Hola, {dashboard.greetingName}</h2>
+                  <p>Aqui tienes el resumen de tu calma financiera.</p>
                 </div>
-                <h3>Pago Proximo</h3>
-                <p>Tu tarjeta de credito vence en 3 dias. Tienes saldo suficiente para el pago.</p>
-                <button type="button">Programar Pago</button>
-              </article>
 
-              <div className={`${styles.card} ${styles.quickActions}`}>
-                <button type="button" className={styles.quickButton}>
-                  <span className={styles.quickIconWrap}>
-                    <img src={transferIcon} alt="" aria-hidden="true" />
-                  </span>
-                  Transferir
-                </button>
-                <button type="button" className={styles.quickButton}>
-                  <span className={styles.quickIconWrap}>
-                    <img src={addAccountIcon} alt="" aria-hidden="true" />
-                  </span>
-                  Anadir Cuenta
-                </button>
-                <button type="button" className={styles.quickButton} onClick={() => setSection('categories')}>
-                  <span className={styles.quickIconWrap}>
-                    <img src={categoriesIcon} alt="" aria-hidden="true" />
-                  </span>
-                  Categorias
-                </button>
-              </div>
-
-              <article className={`${styles.card} ${styles.accountsCard}`}>
-                <div className={styles.sectionHeader}>
-                  <h3>Mis Cuentas</h3>
-                  <button type="button">Ver todas</button>
-                </div>
-                <div className={styles.accountsGrid}>
-                  {accounts.map((account) => (
-                    <div key={account.id} className={styles.accountItem}>
-                      <p className={styles.accountTitle}>{account.title}</p>
-                      <p className={styles.accountSubtitle}>{account.subtitle}</p>
-                      <p className={styles.accountAmount}>{account.amount}</p>
-                      {typeof account.progress === 'number' ? (
-                        <div className={styles.progressTrack}>
-                          <div style={{ width: `${account.progress}%` }} className={styles.progressFill} />
-                        </div>
-                      ) : null}
+                <section className={styles.grid}>
+                  <article className={`${styles.card} ${styles.balanceCard}`}>
+                    <div className={styles.balanceBlur} aria-hidden="true" />
+                    <p className={styles.cardLabel}>BALANCE TOTAL DISPONIBLE</p>
+                    <div className={styles.balanceLine}>
+                      <strong>{formatCurrency(dashboard.totalBalance, dashboard.currency)}</strong>
+                      <span>{dashboard.currency}</span>
                     </div>
-                  ))}
-                </div>
-              </article>
+                    <div className={styles.balanceMeta}>
+                      <span className={styles.balanceTrend}>
+                        <img src={balanceTrendIcon} alt="" aria-hidden="true" />
+                        {dashboard.monthlyBalanceVariationPercent >= 0 ? '+' : ''}
+                        {dashboard.monthlyBalanceVariationPercent}% este mes
+                      </span>
+                      <span className={styles.balanceDivider} aria-hidden="true" />
+                      <button type="button" className={styles.balanceAnalysisButton}>
+                        Ver analisis
+                        <img src={balanceChevronIcon} alt="" aria-hidden="true" />
+                      </button>
+                    </div>
+                  </article>
 
-              <article className={`${styles.card} ${styles.liquidityCard}`}>
-                <div className={styles.sectionHeader}>
-                  <h3>Liquidez a 30 dias</h3>
-                </div>
-                <div className={styles.mockChart}>
-                  <svg viewBox="0 0 100 40" preserveAspectRatio="none">
-                    <polyline points="0,22 18,19 35,25 55,15 72,20 100,12" className={styles.chartLine} />
-                  </svg>
-                </div>
-                <p>Flujo proyectado estable. Sin alertas de sobregiro.</p>
-              </article>
+                  <article className={`${styles.card} ${styles.alertCard}`}>
+                    <div className={styles.alertHeader}>
+                      <span className={styles.alertIconWrap}>
+                        <img src={nextPaymentIcon} alt="" aria-hidden="true" />
+                      </span>
+                      <span className={styles.alertChip}>Alerta</span>
+                    </div>
+                    <h3>{dashboard.nextAlert?.title ?? 'Sin alertas'}</h3>
+                    <p>{dashboard.nextAlert?.message ?? 'No tienes alertas financieras pendientes.'}</p>
+                    <button type="button" disabled={!dashboard.nextAlert}>
+                      Revisar alerta
+                    </button>
+                  </article>
 
-              <article className={`${styles.card} ${styles.transactionsCard}`}>
-                <div className={styles.sectionHeader}>
-                  <h3>Ultimos Movimientos</h3>
-                  <button type="button" className={styles.searchAction}>
-                    Buscar <img src={searchIcon} alt="" aria-hidden="true" />
-                  </button>
-                </div>
-                <div className={styles.transactionList}>
-                  {transactions.map((transaction) => (
-                    <div key={transaction.id} className={styles.transactionRow}>
-                      <div className={styles.transactionIdentity}>
-                        <span className={styles.transactionIconWrap}>
-                          <img src={walletIcon} alt="" aria-hidden="true" />
-                        </span>
-                        <div>
-                          <p className={styles.transactionTitle}>{transaction.title}</p>
-                          <p className={styles.transactionSubtitle}>{transaction.subtitle}</p>
-                        </div>
+                  <div className={`${styles.card} ${styles.quickActions}`}>
+                    <button type="button" className={styles.quickButton}>
+                      <span className={styles.quickIconWrap}>
+                        <img src={transferIcon} alt="" aria-hidden="true" />
+                      </span>
+                      Transferir
+                    </button>
+                    <button type="button" className={styles.quickButton}>
+                      <span className={styles.quickIconWrap}>
+                        <img src={addAccountIcon} alt="" aria-hidden="true" />
+                      </span>
+                      Anadir Cuenta
+                    </button>
+                    <button type="button" className={styles.quickButton} onClick={() => setSection('categories')}>
+                      <span className={styles.quickIconWrap}>
+                        <img src={categoriesIcon} alt="" aria-hidden="true" />
+                      </span>
+                      Categorias
+                    </button>
+                  </div>
+
+                  <article className={`${styles.card} ${styles.accountsCard}`}>
+                    <div className={styles.sectionHeader}>
+                      <h3>Mis Cuentas</h3>
+                      <button type="button">Ver todas</button>
+                    </div>
+                    {dashboard.accounts.length > 0 ? (
+                      <div className={styles.accountsGrid}>
+                        {dashboard.accounts.map((account) => (
+                          <div key={account.id} className={styles.accountItem}>
+                            <p className={styles.accountTitle}>{account.name}</p>
+                            <p className={styles.accountSubtitle}>{account.subtitle}</p>
+                            <p className={styles.accountAmount}>
+                              {formatCurrency(account.balance, dashboard.currency)}
+                            </p>
+                            {typeof account.progressPercentage === 'number' ? (
+                              <div className={styles.progressTrack}>
+                                <div
+                                  style={{ width: `${account.progressPercentage}%` }}
+                                  className={styles.progressFill}
+                                />
+                              </div>
+                            ) : null}
+                          </div>
+                        ))}
                       </div>
-                      <p className={`${styles.transactionAmount} ${transaction.positive ? styles.positiveAmount : ''}`}>
-                        {transaction.amount}
-                      </p>
+                    ) : (
+                      <p className={styles.emptyState}>Aun no tienes cuentas registradas.</p>
+                    )}
+                  </article>
+
+                  <article className={`${styles.card} ${styles.liquidityCard}`}>
+                    <div className={styles.sectionHeader}>
+                      <h3>Liquidez a 30 dias</h3>
                     </div>
-                  ))}
-                </div>
-              </article>
-            </section>
+                    <div className={styles.mockChart}>
+                      {dashboard.liquidity.points.length > 0 ? (
+                        <svg viewBox="0 0 100 40" preserveAspectRatio="none">
+                          <polyline
+                            points={dashboard.liquidity.points
+                              .map((point, index, points) => {
+                                const x = points.length === 1 ? 50 : (index / (points.length - 1)) * 100;
+                                const max = Math.max(...points.map((item) => item.projectedBalance));
+                                const min = Math.min(...points.map((item) => item.projectedBalance));
+                                const range = max - min || 1;
+                                const y = 34 - ((point.projectedBalance - min) / range) * 26;
+                                return `${x},${y}`;
+                              })
+                              .join(' ')}
+                            className={styles.chartLine}
+                          />
+                        </svg>
+                      ) : (
+                        <p className={styles.emptyChart}>Sin datos</p>
+                      )}
+                    </div>
+                    <p>{dashboard.liquidity.message}</p>
+                  </article>
+
+                  <article className={`${styles.card} ${styles.transactionsCard}`}>
+                    <div className={styles.sectionHeader}>
+                      <h3>Ultimos Movimientos</h3>
+                      <button type="button" className={styles.searchAction}>
+                        Buscar <img src={searchIcon} alt="" aria-hidden="true" />
+                      </button>
+                    </div>
+                    {dashboard.recentTransactions.length > 0 ? (
+                      <div className={styles.transactionList}>
+                        {dashboard.recentTransactions.map((transaction) => (
+                          <div key={transaction.id} className={styles.transactionRow}>
+                            <div className={styles.transactionIdentity}>
+                              <span className={styles.transactionIconWrap}>
+                                <img src={walletIcon} alt="" aria-hidden="true" />
+                              </span>
+                              <div>
+                                <p className={styles.transactionTitle}>{transaction.title}</p>
+                                <p className={styles.transactionSubtitle}>{transaction.subtitle}</p>
+                              </div>
+                            </div>
+                            <p
+                              className={`${styles.transactionAmount} ${
+                                transaction.positive ? styles.positiveAmount : ''
+                              }`}
+                            >
+                              {transaction.positive ? '+' : '-'}
+                              {formatCurrency(transaction.amount, dashboard.currency)}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className={styles.emptyState}>Aun no tienes movimientos registrados.</p>
+                    )}
+                  </article>
+                </section>
+              </>
+            ) : null}
           </>
         ) : (
           <CategoriesPage />

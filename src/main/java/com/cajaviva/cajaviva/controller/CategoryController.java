@@ -1,4 +1,4 @@
-﻿package com.cajaviva.cajaviva.controller;
+package com.cajaviva.cajaviva.controller;
 
 import com.cajaviva.cajaviva.controller.dto.CategoryUpsertRequest;
 import com.cajaviva.cajaviva.entity.Category;

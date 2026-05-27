@@ -24,7 +24,6 @@ export function LoginPage({
 
   useEffect(() => {
     if (!animateOnMount) {
-      setShowBanner(true);
       return;
     }
 
