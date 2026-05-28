@@ -85,4 +85,9 @@ public class RecurrentTransactionServiceImpl implements RecurrentTransactionServ
     public List<RecurrentTransaction> findByAccountId(UUID account_id) {
         return recurrentTransactionRepository.findByAccount_Id(account_id);
     }
+
+    @Override
+    public List<RecurrentTransaction> findByUserId(UUID userId) {
+        return recurrentTransactionRepository.findByAccount_UserId(userId);
+    }
 }

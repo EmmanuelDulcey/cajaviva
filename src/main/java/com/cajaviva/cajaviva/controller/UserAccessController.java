@@ -2,6 +2,8 @@ package com.cajaviva.cajaviva.controller;
 
 import com.cajaviva.cajaviva.service.UserAccessService;
 import com.cajaviva.cajaviva.entity.UserAccess;
+import com.cajaviva.cajaviva.exception.ForbiddenAccessException;
+import com.cajaviva.cajaviva.utilities.SecurityUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.*;
@@ -29,12 +31,17 @@ public class UserAccessController {
 
     @GetMapping
     public List<UserAccess> getAllUserAccesses() {
-        return userAccessService.findAll();
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        return userAccessService.findByUserId(currentUserId);
     }
 
     @GetMapping("/user/{user_id}")
     public List<UserAccess> getByUser(@PathVariable("user_id") UUID user_id) {
-        return userAccessService.findByUserId(user_id);
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        if (!user_id.equals(currentUserId)) {
+            throw new ForbiddenAccessException("Cannot access user accesses of another user");
+        }
+        return userAccessService.findByUserId(currentUserId);
     }
 
     @GetMapping("/account/{account_id}")
@@ -73,7 +80,12 @@ public class UserAccessController {
         }
     )
     public UserAccess getById(@PathVariable("id") UUID id) {
-        return userAccessService.findById(id);
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        UserAccess userAccess = userAccessService.findById(id);
+        if (!userAccess.getUserId().equals(currentUserId)) {
+            throw new ForbiddenAccessException("User access does not belong to the current user");
+        }
+        return userAccess;
     }
 
     @PutMapping("/{id}")

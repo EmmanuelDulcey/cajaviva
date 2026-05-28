@@ -2,6 +2,8 @@ package com.cajaviva.cajaviva.controller;
 
 import com.cajaviva.cajaviva.service.LiquidityProjectionService;
 import com.cajaviva.cajaviva.entity.LiquidityProjection;
+import com.cajaviva.cajaviva.exception.ForbiddenAccessException;
+import com.cajaviva.cajaviva.utilities.SecurityUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,7 +39,8 @@ public class LiquidityProjectionController {
         }
     )
     public List<LiquidityProjection> getAllProjections() {
-        return liquidityProjectionService.findAll();
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        return liquidityProjectionService.findByUserId(currentUserId);
     }
 
     @GetMapping("/{id}")
@@ -52,7 +55,12 @@ public class LiquidityProjectionController {
         }
     )
     public LiquidityProjection getProjectionById(@PathVariable UUID id) {
-        return liquidityProjectionService.findById(id);
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        LiquidityProjection projection = liquidityProjectionService.findById(id);
+        if (!projection.getAccount().getUserId().equals(currentUserId)) {
+            throw new ForbiddenAccessException("Projection does not belong to the current user");
+        }
+        return projection;
     }
 
     @GetMapping("/account/{account_id}")
@@ -66,7 +74,12 @@ public class LiquidityProjectionController {
         }
     )
     public List<LiquidityProjection> getByAccount(@PathVariable("account_id") UUID account_id) {
-        return liquidityProjectionService.findByAccountId(account_id);
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        List<LiquidityProjection> projections = liquidityProjectionService.findByAccountId(account_id);
+        if (!projections.isEmpty() && !projections.get(0).getAccount().getUserId().equals(currentUserId)) {
+            throw new ForbiddenAccessException("Account does not belong to the current user");
+        }
+        return projections;
     }
 
     @PostMapping

@@ -58,4 +58,9 @@ public class FinancialTransactionServiceImpl implements FinancialTransactionServ
     public List<FinancialTransaction> findByAccountId(UUID account_id) {
         return transactionRepository.findByAccount_Id(account_id);
     }
+
+    @Override
+    public List<FinancialTransaction> findByUserId(UUID userId) {
+        return transactionRepository.findByAccount_UserId(userId);
+    }
 }
