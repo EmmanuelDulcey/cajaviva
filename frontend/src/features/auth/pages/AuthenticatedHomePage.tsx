@@ -36,6 +36,31 @@ const formatCurrency = (amount: number, currency = 'COP') =>
     maximumFractionDigits: 0,
   }).format(amount);
 
+const resolveGreetingName = (email: string) => {
+  const localPart = email.split('@', 1)[0]?.replace(/[._-]+/g, ' ').trim();
+
+  if (!localPart) {
+    return 'Usuario';
+  }
+
+  return localPart.charAt(0).toUpperCase() + localPart.slice(1);
+};
+
+const createEmptyDashboard = (email: string): DashboardSummary => ({
+  userId: '',
+  greetingName: resolveGreetingName(email),
+  totalBalance: 0,
+  currency: 'COP',
+  monthlyBalanceVariationPercent: 0,
+  nextAlert: null,
+  accounts: [],
+  liquidity: {
+    message: 'Aun no hay proyecciones para los proximos 30 dias.',
+    points: [],
+  },
+  recentTransactions: [],
+});
+
 function DashboardSkeleton() {
   return (
     <>
@@ -95,7 +120,6 @@ export function AuthenticatedHomePage({ email, onLogout }: AuthenticatedHomePage
   const [section, setSection] = useState<AppSection>('dashboard');
   const [dashboard, setDashboard] = useState<DashboardSummary | null>(null);
   const [dashboardLoading, setDashboardLoading] = useState(true);
-  const [dashboardError, setDashboardError] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -103,14 +127,13 @@ export function AuthenticatedHomePage({ email, onLogout }: AuthenticatedHomePage
     const loadDashboard = async () => {
       try {
         setDashboardLoading(true);
-        setDashboardError(false);
         const data = await dashboardApi.summary();
         if (isMounted) {
           setDashboard(data);
         }
       } catch {
         if (isMounted) {
-          setDashboardError(true);
+          setDashboard(createEmptyDashboard(email));
         }
       } finally {
         if (isMounted) {
@@ -124,7 +147,7 @@ export function AuthenticatedHomePage({ email, onLogout }: AuthenticatedHomePage
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [email]);
 
   return (
     <main className={styles.page}>
@@ -203,13 +226,6 @@ export function AuthenticatedHomePage({ email, onLogout }: AuthenticatedHomePage
         {section === 'dashboard' ? (
           <>
             {dashboardLoading ? <DashboardSkeleton /> : null}
-
-            {!dashboardLoading && dashboardError ? (
-              <section className={styles.emptyDashboard}>
-                <h2>No pudimos cargar tu dashboard</h2>
-                <p>Intenta actualizar la pagina en unos segundos.</p>
-              </section>
-            ) : null}
 
             {!dashboardLoading && dashboard ? (
               <>
