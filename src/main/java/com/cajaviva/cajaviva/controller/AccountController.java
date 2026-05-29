@@ -24,9 +24,11 @@ import java.util.UUID;
 @Tag(name = "Account", description = "Operaciones sobre cuentas bancarias")
 public class AccountController {
     private final AccountService accountService;
+    private final com.cajaviva.cajaviva.service.LiquidityProjectionService liqudityProjectionService;
 
-    public AccountController(AccountService accountService) {
+    public AccountController(AccountService accountService, com.cajaviva.cajaviva.service.LiquidityProjectionService liqudityProjectionService) {
         this.accountService = accountService;
+        this.liqudityProjectionService = liqudityProjectionService;
     }
 
     @GetMapping
@@ -68,10 +70,18 @@ public ResponseEntity<List<Account>> getAccountsByUser(@PathVariable("user_id") 
         @ApiResponse(responseCode = "404", description = "Cuenta no encontrada")
     }
 )
-public ResponseEntity<Account> getAccountById(@PathVariable UUID id) {
+public ResponseEntity<com.cajaviva.cajaviva.dto.AccountWithProjectionResponse> getAccountById(@PathVariable UUID id) {
         Account account = accountService.findById(id);
         if (account == null) throw new ResourceNotFoundException("Account not found");
-        return ResponseEntity.ok(account);
+        // Calculamos proyección a 30 días desde mañana
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.LocalDate start = today.plusDays(1);
+        java.time.LocalDate end = start.plusDays(30);
+        java.util.List<com.cajaviva.cajaviva.entity.LiquidityProjection> projection = liqudityProjectionService.calculateProjection(id, start, end);
+        com.cajaviva.cajaviva.dto.AccountWithProjectionResponse resp = new com.cajaviva.cajaviva.dto.AccountWithProjectionResponse();
+        resp.setAccount(account);
+        resp.setProjection(projection);
+        return ResponseEntity.ok(resp);
     }
 
     @PostMapping

@@ -1,232 +1,248 @@
 # CajaViva
 
-CajaViva es una API backend desarrollada en Spring Boot para la gestión de información financiera de usuarios. El proyecto modela usuarios, cuentas, categorías, transacciones financieras, movimientos recurrentes, proyecciones de liquidez y alertas.  
-**Esta implementación ilustra la coexistencia de persistencia clásica JDBC (sólo para User) y Spring Data JPA (para todas las demás entidades).**
+CajaViva es una API backend desarrollada en Spring Boot para la gestión de información financiera de usuarios. El proyecto modela usuarios, cuentas, categorías, transacciones financieras, movimientos recurrentes, proyecciones de liquidez y alertas.
 
 ---
 
 ## Tecnologías y dependencias principales
 
 - Java 17
-- Spring Boot 3.x
+- Spring Boot 3.2.5
 - Spring Data JPA (para entidades principales)
 - JDBC puro/DAO manual (solo entidad User)
-- SQL Server
+- SQL Server + H2 (dev/test)
 - Flyway (migraciones)
-- Springdoc OpenAPI (documentación Swagger)
+- Springdoc OpenAPI 2.5 (Swagger)
+- JWT + Refresh Tokens (autenticación con cookies)
+- Spring Security, BCrypt
 
 ---
 
 ## Arquitectura del proyecto
 
-- **controller/**: Endpoints REST (por entidad)
-- **entity/**: Modelos de dominio (entidades/POJOs)
-- **repository/JPA/**: Interfaces `JpaRepository` para persistencia JPA (solo entidades migradas)
-- **dao/**: Contrato DAO JDBC para User
-- **dao/impl/**: Implementación JDBC/DAO manual para User
-- **service/**: Lógica de negocio por entidad; servicios JPA y JDBC
-- **service/impl/**: Implementaciones de capa de servicio
-- **config/**: Configuración de beans, JDBC y OpenAPI
-- **exception/**: Manejo centralizado de errores
-- **utilities/**: Clases utilitarias (ejemplo: conexión JDBC)
-- **db/migration/**: Scripts Flyway para inicialización de base de datos
+```
+src/main/java/com/cajaviva/cajaviva/
+├── auth/            — Autenticación JWT con cookies (login, refresh, logout)
+│   ├── config/      — Propiedades de JWT y cookies
+│   ├── controller/  — AuthController
+│   ├── dto/         — LoginRequest, AuthResponse
+│   ├── security/    — Filtros JWT, manejadores 401/403, UserPrincipal
+│   └── service/     — AuthService, JwtService, CookieService, RefreshTokenService
+├── config/          — SecurityConfig, OpenApiConfig
+├── controller/      — Endpoints REST (por entidad) + DTOs específicos
+├── dao/             — Contrato DAO JDBC para User
+│   └── impl/        — Implementación JDBC manual para User
+├── dto/             — DTOs compartidos (RegisterUserRequest, etc.)
+├── entity/          — Modelos de dominio (JPA entities + POJO User)
+├── exception/       — Manejo centralizado de errores (GlobalExceptionHandler)
+├── repository/JPA/  — Interfaces JpaRepository
+├── service/         — Interfaces de servicio
+│   └── impl/        — Implementaciones con JPA y JDBC
+└── utilities/       — Clases utilitarias
+```
 
 ---
 
 ## Estado de persistencia por entidad
 
-| Entidad                  | Persistencia    | Paquetes principales                           | Notas                                                |
-|--------------------------|----------------|-----------------------------------------------|------------------------------------------------------|
-| User                     | JDBC/DAO       | dao/, dao/impl/, service/, config/UserConfig   | JDBC puro por requisito, ejemplo de legado/transición |
-| Account                  | JPA            | repository/JPA/, service/                     | Migrada a JPA                                        |
-| Category                 | JPA            | repository/JPA/, service/                     | Migrada a JPA                                        |
-| Alert                    | JPA            | repository/JPA/, service/                     | Migrada a JPA                                        |
-| FinancialTransaction     | JPA            | repository/JPA/, service/                     | Migrada a JPA                                        |
-| LiquidityProjection      | JPA            | repository/JPA/, service/                     | Migrada a JPA                                        |
-| RecurrentTransaction     | JPA            | repository/JPA/, service/                     | Migrada a JPA                                        |
-| UserAccess               | JPA            | repository/JPA/, service/                     | Migrada a JPA                                        |
+| Entidad                  | Persistencia    | Paquetes principales         |
+|--------------------------|-----------------|------------------------------|
+| User                     | JDBC/DAO        | dao/, dao/impl/, service/    |
+| Account                  | JPA             | repository/JPA/, service/    |
+| Category                 | JPA             | repository/JPA/, service/    |
+| Alert                    | JPA             | repository/JPA/, service/    |
+| FinancialTransaction     | JPA             | repository/JPA/, service/    |
+| LiquidityProjection      | JPA             | repository/JPA/, service/    |
+| RecurrentTransaction     | JPA             | repository/JPA/, service/    |
+| UserAccess               | JPA             | repository/JPA/, service/    |
+| AuthUser                 | JPA             | repository/JPA/, service/    |
+| RefreshToken             | JPA             | repository/JPA/, service/    |
 
-> **Nota:**  
-> Sólo la entidad User mantiene acceso directo con JDBC y estructura DAO manual. Todas las demás entidades están gestionadas exclusivamente por Spring Data JPA.
+> Solo la entidad User mantiene acceso directo con JDBC. Todas las demás entidades están gestionadas por Spring Data JPA.
 
 ---
 
 ## Requisitos previos
 
 - Java 17+
-- Maven (o uso de `mvnw.cmd`/`mvnw`)
-- SQL Server accesible (instancia local o cloud)
-- SQL Server Management Studio (opcional, para administración y troubleshooting)
+- Maven (o `mvnw.cmd`/`mvnw`)
+- SQL Server accesible (o perfil H2 para desarrollo rápido)
 
 ---
 
 ## Configuración de base de datos
 
-Por defecto, este proyecto usa dos perfiles: **sqlserver** y **h2**.
+Dos perfiles disponibles:
 
-- El perfil **sqlserver** utiliza tu instancia de SQL Server real — recomendado para desarrollo o pruebas serias, permite persistencia real de datos.
-- El perfil **h2** utiliza una base de datos en memoria _temporal_, ideal para pruebas rápidas (los datos se borran en cada arranque y los CRUD parecerán "no funcionar").
+| Perfil       | Base de datos | Flyway | Uso                     |
+|-------------|---------------|--------|--------------------------|
+| `sqlserver` | SQL Server    | Sí     | Producción/desarrollo    |
+| `h2`        | H2 en memoria | No     | Tests rápidos            |
 
-La app lee las siguientes variables de entorno o valores por defecto:
+Activar con:
+```sh
+mvn spring-boot:run -Dspring-boot.run.profiles=sqlserver
+# o
+$env:SPRING_PROFILES_ACTIVE="sqlserver"
+```
 
-- `DB_URL` (por defecto: `jdbc:sqlserver://localhost:1433;databaseName=CajaViva;encrypt=true;trustServerCertificate=true`)
-- `DB_USER` (por defecto: `sa`)
-- `DB_PASSWORD` (por defecto: `admin`)
+### Variables de entorno
 
-Para cambiar la configuración, sobrescribe variables de entorno antes de iniciar la app.
-
-**IMPORTANTE:** ¡Si quieres persistencia real y probar bien los CRUD (incluido User), debes activar el perfil sqlserver! Puedes hacerlo así:
-
-- Con Maven (recomendado):
-  ```sh
-  mvn spring-boot:run -Dspring-boot.run.profiles=sqlserver
-  ```
-- O con variable de entorno:
-  ```sh
-  $env:SPRING_PROFILES_ACTIVE="sqlserver"
-  ```
-
----
-
-## Preparación e inicio
-
-1. **Clona el repositorio:**
-   ```sh
-   git clone https://github.com/EmmanuelDulcey/cajaviva.git
-   cd cajaviva
-   ```
-
-2. **Crea la base de datos**  
-   Asegúrate de tener una base llamada `CajaViva` en tu instancia de SQL Server.
-
-3. **Configura las credenciales de acceso**  
-   Ejemplo en PowerShell:
-   ```sh
-   $env:DB_URL="jdbc:sqlserver://localhost:1433;databaseName=CajaViva;encrypt=true;trustServerCertificate=true"
-   $env:DB_USER="sa"
-   $env:DB_PASSWORD="tu_password"
-   ```
-
-4. **Lanza la aplicación** (en modo SQLSERVER para persistencia):
-   - Con Maven:
-     ```sh
-     mvn spring-boot:run -Dspring-boot.run.profiles=sqlserver
-     ```
-   - O con wrapper:
-     ```sh
-     ./mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=sqlserver
-     ```
+| Variable          | Descripción                          | Valor por defecto                                                   |
+|-------------------|--------------------------------------|----------------------------------------------------------------------|
+| `DB_URL`          | URL de conexión JDBC                 | `jdbc:sqlserver://localhost:1433;databaseName=CajaViva;...`          |
+| `DB_USER`         | Usuario de base de datos             | `sa`                                                                |
+| `DB_PASSWORD`     | Contraseña de base de datos          | `admin`                                                              |
+| `JWT_SIGNING_KEY` | Clave secreta para firmar JWT        | `01234567890123456789012345678901`                                  |
 
 ---
 
-## Endpoints principales
+## Inicio rápido
 
-- **API base:**
-  http://localhost:8080/v1
-- **Swagger UI:**
-  http://localhost:8080/v1/swagger-ui.html
-- **OpenAPI:**
-  http://localhost:8080/v1/api-docs
+```sh
+git clone https://github.com/EmmanuelDulcey/cajaviva.git
+cd cajaviva
+
+# Crear base de datos CajaViva en SQL Server
+
+# Configurar credenciales
+$env:DB_URL="jdbc:sqlserver://localhost:1433;databaseName=CajaViva;encrypt=true;trustServerCertificate=true"
+$env:DB_USER="sa"
+$env:DB_PASSWORD="tu_password"
+
+# Ejecutar
+./mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=sqlserver
+```
 
 ---
 
 ## Endpoints de la API
 
-### User
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/users` | Listar todos los usuarios |
-| GET | `/users/{id}` | Obtener usuario por ID |
-| POST | `/users` | Crear usuario |
-| PUT | `/users/{id}` | Actualizar usuario |
-| DELETE | `/users/{id}` | Eliminar usuario |
+**Base:** `http://localhost:8080/v1`  
+**Swagger UI:** `http://localhost:8080/v1/swagger-ui.html`  
+**OpenAPI:** `http://localhost:8080/v1/api-docs`
+
+### Autenticación
+
+| Método | Endpoint              | Descripción                    |
+|--------|-----------------------|--------------------------------|
+| POST   | `/auth/login`         | Iniciar sesión                 |
+| POST   | `/auth/refresh`       | Refrescar token de acceso      |
+| POST   | `/auth/logout`        | Cerrar sesión                  |
+| GET    | `/auth/me`            | Obtener sesión actual          |
+| GET    | `/auth/csrf`          | Obtener token CSRF             |
+
+### Registro público
+
+| Método | Endpoint          | Descripción              |
+|--------|-------------------|--------------------------|
+| POST   | `/registries/users` | Registrar nuevo usuario |
+
+### User (JDBC)
+
+| Método | Endpoint        | Descripción             |
+|--------|-----------------|-------------------------|
+| GET    | `/users`        | Listar usuarios         |
+| GET    | `/users/{id}`   | Obtener usuario por ID  |
+| POST   | `/users`        | Crear usuario           |
+| PUT    | `/users/{id}`   | Actualizar usuario      |
+| DELETE | `/users/{id}`   | Eliminar usuario        |
 
 ### Account
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/accounts` | Listar todas las cuentas |
-| GET | `/accounts/user/{user_id}` | Listar cuentas por usuario |
-| GET | `/accounts/{id}` | Obtener cuenta por ID |
-| POST | `/accounts` | Crear cuenta |
-| PUT | `/accounts/{id}` | Actualizar cuenta |
-| DELETE | `/accounts/{id}` | Eliminar cuenta |
 
-### UserAccess
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/user-accesses` | Listar todos los accesos |
-| GET | `/api/user-accesses/user/{user_id}` | Listar accesos por usuario |
-| GET | `/api/user-accesses/account/{account_id}` | Listar accesos por cuenta |
-| GET | `/api/user-accesses/{id}` | Obtener acceso por ID |
-| POST | `/api/user-accesses` | Crear acceso |
-| PUT | `/api/user-accesses/{id}` | Actualizar acceso |
-| DELETE | `/api/user-accesses/{id}` | Eliminar acceso |
+| Método | Endpoint                     | Descripción                          |
+|--------|------------------------------|--------------------------------------|
+| GET    | `/accounts`                  | Listar cuentas                       |
+| GET    | `/accounts/user/{user_id}`   | Listar cuentas por usuario           |
+| GET    | `/accounts/{id}`             | Obtener cuenta con proyección 30 días |
+| POST   | `/accounts`                  | Crear cuenta                         |
+| PUT    | `/accounts/{id}`             | Actualizar cuenta                    |
+| DELETE | `/accounts/{id}`             | Eliminar cuenta                      |
 
 ### Category
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/categories` | Listar todas las categorías |
-| GET | `/api/categories/{id}` | Obtener categoría por ID |
-| POST | `/api/categories` | Crear categoría |
-| PUT | `/api/categories/{id}` | Actualizar categoría |
-| DELETE | `/api/categories/{id}` | Eliminar categoría |
+
+| Método | Endpoint               | Descripción            |
+|--------|------------------------|------------------------|
+| GET    | `/api/categories`      | Listar categorías      |
+| GET    | `/api/categories/{id}` | Obtener categoría      |
+| POST   | `/api/categories`      | Crear categoría        |
+| PUT    | `/api/categories/{id}` | Actualizar categoría   |
+| DELETE | `/api/categories/{id}` | Eliminar categoría     |
 
 ### FinancialTransaction
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/transactions` | Listar todas las transacciones |
-| GET | `/api/transactions/{id}` | Obtener transacción por ID |
-| GET | `/api/transactions/account/{account_id}` | Listar transacciones por cuenta |
-| POST | `/api/transactions` | Crear transacción |
-| PUT | `/api/transactions/{id}` | Actualizar transacción |
-| DELETE | `/api/transactions/{id}` | Eliminar transacción |
 
-### Alert
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/alerts` | Listar todas las alertas |
-| GET | `/api/alerts/{id}` | Obtener alerta por ID |
-| GET | `/api/alerts/projection/{projection_id}` | Listar alertas por proyección |
-| POST | `/api/alerts` | Crear alerta |
-| PUT | `/api/alerts/{id}` | Actualizar alerta |
-| DELETE | `/api/alerts/{id}` | Eliminar alerta |
+| Método | Endpoint                              | Descripción                     |
+|--------|---------------------------------------|----------------------------------|
+| GET    | `/api/transactions`                   | Listar transacciones             |
+| GET    | `/api/transactions/{id}`              | Obtener transacción              |
+| GET    | `/api/transactions/account/{account_id}` | Listar por cuenta              |
+| POST   | `/api/transactions`                   | Crear transacción                |
+| PUT    | `/api/transactions/{id}`              | Actualizar transacción           |
+| DELETE | `/api/transactions/{id}`              | Eliminar transacción             |
 
 ### LiquidityProjection
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/liquidity-projections` | Listar todas las proyecciones |
-| GET | `/api/liquidity-projections/{id}` | Obtener proyección por ID |
-| GET | `/api/liquidity-projections/account/{account_id}` | Listar proyecciones por cuenta |
-| POST | `/api/liquidity-projections` | Crear proyección |
-| PUT | `/api/liquidity-projections/{id}` | Actualizar proyección |
-| DELETE | `/api/liquidity-projections/{id}` | Eliminar proyección |
+
+| Método | Endpoint                                      | Descripción                          |
+|--------|-----------------------------------------------|--------------------------------------|
+| GET    | `/api/liquidity-projections`                  | Listar proyecciones                  |
+| GET    | `/api/liquidity-projections/{id}`             | Obtener proyección por ID            |
+| GET    | `/api/liquidity-projections/account/{account_id}` | Listar por cuenta                 |
+| POST   | `/api/liquidity-projections`                  | Crear proyección manual              |
+| POST   | `/api/liquidity-projections/calculate`        | Calcular proyección en rango fechas  |
+| PUT    | `/api/liquidity-projections/{id}`             | Actualizar proyección                |
+| DELETE | `/api/liquidity-projections/{id}`             | Eliminar proyección                  |
 
 ### RecurrentTransaction
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/recurrent-transactions` | Listar todas las transacciones recurrentes |
-| GET | `/api/recurrent-transactions/{id}` | Obtener transacción recurrente por ID |
-| GET | `/api/recurrent-transactions/account/{account_id}` | Listar transacciones recurrentes por cuenta |
-| POST | `/api/recurrent-transactions` | Crear transacción recurrente |
-| PUT | `/api/recurrent-transactions/{id}` | Actualizar transacción recurrente |
-| DELETE | `/api/recurrent-transactions/{id}` | Eliminar transacción recurrente |
+
+| Método | Endpoint                                      | Descripción                     |
+|--------|-----------------------------------------------|----------------------------------|
+| GET    | `/api/recurrent-transactions`                 | Listar transacciones recurrentes |
+| GET    | `/api/recurrent-transactions/{id}`            | Obtener por ID                   |
+| GET    | `/api/recurrent-transactions/account/{account_id}` | Listar por cuenta          |
+| POST   | `/api/recurrent-transactions`                 | Crear                            |
+| PUT    | `/api/recurrent-transactions/{id}`            | Actualizar                       |
+| DELETE | `/api/recurrent-transactions/{id}`            | Eliminar                         |
+
+### Alert
+
+| Método | Endpoint                                      | Descripción            |
+|--------|-----------------------------------------------|------------------------|
+| GET    | `/api/alerts`                                 | Listar alertas         |
+| GET    | `/api/alerts/{id}`                            | Obtener alerta         |
+| GET    | `/api/alerts/projection/{projection_id}`      | Listar por proyección  |
+| POST   | `/api/alerts`                                 | Crear alerta           |
+| PUT    | `/api/alerts/{id}`                            | Actualizar alerta      |
+| DELETE | `/api/alerts/{id}`                            | Eliminar alerta        |
+
+### UserAccess
+
+| Método | Endpoint                                         | Descripción          |
+|--------|--------------------------------------------------|----------------------|
+| GET    | `/api/user-accesses`                             | Listar accesos       |
+| GET    | `/api/user-accesses/user/{user_id}`              | Listar por usuario   |
+| GET    | `/api/user-accesses/account/{account_id}`        | Listar por cuenta    |
+| GET    | `/api/user-accesses/{id}`                        | Obtener acceso       |
+| POST   | `/api/user-accesses`                             | Crear acceso         |
+| PUT    | `/api/user-accesses/{id}`                        | Actualizar acceso    |
+| DELETE | `/api/user-accesses/{id}`                        | Eliminar acceso      |
 
 ---
 
 ## Manejo de errores
 
-La API cuenta con un sistema centralizado de manejo de excepciones (`GlobalExceptionHandler`) que retorna respuestas JSON estructuradas:
+`GlobalExceptionHandler` centraliza excepciones y retorna respuestas JSON:
 
-| Código HTTP | Descripción |
-|-------------|-------------|
-| 200 | Éxito |
-| 201 | Recurso creado |
-| 400 | Error de validación o parámetro inválido |
-| 404 | Recurso no encontrado |
-| 409 | Conflicto (recurso duplicado) |
-| 500 | Error interno del servidor |
+| Código | Descripción                          |
+|--------|--------------------------------------|
+| 200    | Éxito                                |
+| 201    | Recurso creado                       |
+| 400    | Error de validación o parámetro      |
+| 401    | No autenticado                       |
+| 403    | Acceso denegado                      |
+| 404    | Recurso no encontrado                |
+| 409    | Conflicto (duplicado)                |
+| 500    | Error interno                        |
 
-**Formato de respuesta de error:**
 ```json
 {
   "message": "Descripción del error",
@@ -237,133 +253,45 @@ La API cuenta con un sistema centralizado de manejo de excepciones (`GlobalExcep
 
 ---
 
-## Migraciones automáticas (Flyway)
+## Migraciones (Flyway)
 
-- Todas las tablas se crean automáticamente al inicio si la base está vacía.
-- Los scripts de migración están en `/src/main/resources/db/migration`.
-
----
-
-## Consideraciones y troubleshooting
-
-- **TCP/IP**  
-  Activa el protocolo TCP/IP en SQL Server para aceptar conexiones externas (guía en documentación oficial de Microsoft).
-- **Modo de autenticación**  
-  Activa "Mixed Mode" (SQL+Windows Authentication) para usar usuario/password.
-- **Puerto y usuario**  
-  Si usas otro puerto o usuario distinto, actualiza `DB_URL` y credenciales.
-- **Primera ejecución**  
-  Si tienes error de login (14060), asegúrate que el usuario no exista duplicado o crea uno nuevo exclusivo para la app.
+Los scripts están en `src/main/resources/db/migration/`:
+- `V1__init.sql` — Esquema inicial (8 tablas)
+- `V2__auth_refresh_tokens.sql` — Tabla de refresh tokens
+- `V3__align_jpa_with_schema.sql` — Ajustes de columnas
 
 ---
 
-## Notas sobre arquitectura
+## Pruebas
 
-- Arquitectura en capas (Controller → Service → Repository/JdbcDao → BD).
-- User mantiene JDBC manual para demostración y compatibilidad.
-- Entidades migradas a JPA aprovechan JpaRepository y relaciones automáticas.
-- Centralización de errores/excepciones en `exception/`.
-- Código preparado para facilitar siguiente transición completa a JPA.
+```sh
+# Todas las pruebas
+mvn clean test
+
+# Prueba específica
+mvn -Dtest=LiquidityProjectionServiceTest test
+```
+
+El proyecto incluye **tests unitarios** con JUnit 5 y Mockito para:
+- Servicios (cobertura de lógica de negocio)
+- Controladores (seguridad, acceso autenticado)
+- DAOs (JDBC)
 
 ---
 
-## Pruebas y mantenimiento
+## Frontend
 
-- Ejecutar tests:
-  ```sh
-  mvn test
-  ```
-- Compilar:
-  ```sh
-  mvn clean compile
-  ```
+El frontend React está en el directorio `frontend/`. Ver su [README](frontend/README.md).
+
+```sh
+cd frontend
+npm install
+npm run dev
+```
 
 ---
 
 ## Créditos
 
-Desarrollado por:  
-Emmanuel Dulcey  
+Desarrollado por Emmanuel Dulcey  
 [Repositorio en GitHub](https://github.com/EmmanuelDulcey/cajaviva)
-
----
-## Pruebas unitarias
-
-Este proyecto incluye pruebas unitarias para validar la lógica de negocio y la persistencia en los **DAOs** y **Services**, implementadas con **JUnit 5** y **Mockito**.
-
-### Ejecutar todas las pruebas
-En la raíz del proyecto:
-```bash
-mvn clean test 
-mvn -Dtest=NombreDelTest test
-
-### CajaViva - Entregable
-
-## Backend
-- Comando: `mvn spring-boot:run`
-- Puerto: `8080`
-- Variables de entorno:
-  - `JWT_SIGNING_KEY=01234567890123456789012345678901`
-  - `DB_URL=jdbc:sqlserver://localhost:1433;databaseName=CajaViva;encrypt=true;trustServerCertificate=true`
-  - `DB_USER=sa`
-  - `DB_PASS=admin`
-- Credenciales de prueba:
-  - Usuario: `sa`
-  - Contraseña: `admin`
-
-## Frontend
-- Comando: `npm run dev`
-- Puerto: `5173` (por defecto de Vite, confirmar en consola)
-- Variables de entorno:
-  - `VITE_API_BASE_URL=http://localhost:8080/v1`
-
-## Tests de autenticación
-
-El flujo de login está cubierto por Cypress en `cypress/e2e/login.cy.ts`.
-
-Este test valida:
-- Que el formulario de login se renderiza correctamente.
-- Que el usuario puede ingresar credenciales válidas.
-- Que la aplicación redirige al dashboard (`/app`).
-- Que se muestra contenido del dashboard (ej. menú "Inicio").
-
-Para ejecutar el test:
-```bash
-npm run test:e2e
-
-
-## Validación manual CRUDL
-
-Además del login, el proyecto permite validar las operaciones básicas de CRUDL (Crear, Leer, Actualizar, Eliminar, Listar).  
-Sigue estos pasos para reproducirlas:
-
-### 1. Login
-- Abre `http://localhost:5173/`.
-- Ingresa credenciales de prueba (ejemplo: `sample@email.com` / `admin`).
-- Verifica que redirige al dashboard `/app`.
-
-### 2. Listar
-- En el dashboard, revisa el menú lateral (**Inicio**, **Cuentas**, **Transacciones**).
-- Confirma que se muestran registros existentes (ejemplo: transacciones previas).
-
-### 3. Crear
-- Haz clic en el botón verde **Nueva Transacción**.
-- Completa el formulario con datos de prueba.
-- Guarda y confirma que aparece en la lista.
-
-### 4. Editar
-- Selecciona una transacción existente.
-- Modifica un campo (ejemplo: monto o descripción).
-- Guarda y verifica que el cambio se refleja en la lista.
-
-### 5. Eliminar
-- Selecciona una transacción existente.
-- Haz clic en eliminar.
-- Confirma que desaparece de la lista.
-
----
-
-### Evidencia
-Para completar la validación:
-- Adjunta capturas de cada paso (login, listar, crear, editar, eliminar).
-- Opcional: añade tests Cypress para cubrir al menos una operación CRUDL (ejemplo: crear transacción).
