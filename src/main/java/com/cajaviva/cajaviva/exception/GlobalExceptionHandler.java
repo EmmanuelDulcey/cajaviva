@@ -13,14 +13,11 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-    private static final Pattern NULL_COLUMN_PATTERN = Pattern.compile("column '([^']+)'", Pattern.CASE_INSENSITIVE);
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleResourceNotFound(ResourceNotFoundException exception) {
@@ -40,6 +37,12 @@ public class GlobalExceptionHandler {
         return buildResponse(exception.getMessage(), "BUSINESS_VALIDATION_ERROR", HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(ForbiddenAccessException.class)
+    public ResponseEntity<ApiErrorResponse> handleForbiddenAccess(ForbiddenAccessException exception) {
+        logger.warn("Acceso prohibido: {}", exception.getMessage());
+        return buildResponse(exception.getMessage(), "FORBIDDEN_ACCESS", HttpStatus.FORBIDDEN);
+    }
+
     @ExceptionHandler(AuthenticationFailedException.class)
     public ResponseEntity<ApiErrorResponse> handleAuthenticationFailed(AuthenticationFailedException exception) {
         logger.warn("Error de autenticacion: {}", exception.getMessage());
@@ -57,38 +60,12 @@ public class GlobalExceptionHandler {
         String message = exception.getMostSpecificCause().getMessage();
         logger.error("Violacion de integridad de datos: {}", message);
 
-        if (message == null) {
-            return buildResponse("Violacion de integridad de datos.", "DATA_INTEGRITY_ERROR", HttpStatus.CONFLICT);
+        if (message.contains("Duplicate entry")) {
+            return buildResponse("El recurso ya existe (duplicado).", "DUPLICATE_RESOURCE", HttpStatus.CONFLICT);
         }
-
-        String normalizedMessage = message.toLowerCase();
-
-        if (normalizedMessage.contains("duplicate entry")
-                || normalizedMessage.contains("cannot insert duplicate key")
-                || normalizedMessage.contains("unique key constraint")
-                || normalizedMessage.contains("unique index")) {
-            return buildResponse("Ya existe un registro con valores unicos duplicados.", "DUPLICATE_RESOURCE", HttpStatus.CONFLICT);
-        }
-
-        if (normalizedMessage.contains("foreign key constraint")) {
+        if (message.contains("foreign key constraint")) {
             return buildResponse("El recurso referenciado no existe.", "REFERENCED_RESOURCE_NOT_FOUND", HttpStatus.BAD_REQUEST);
         }
-
-        if (normalizedMessage.contains("cannot insert the value null")
-                || normalizedMessage.contains("null value")
-                || normalizedMessage.contains("not-null")) {
-            Matcher matcher = NULL_COLUMN_PATTERN.matcher(message);
-            if (matcher.find()) {
-                String columnName = matcher.group(1);
-                return buildResponse(
-                        "Falta un campo obligatorio en base de datos: '" + columnName + "'.",
-                        "MISSING_REQUIRED_FIELDS",
-                        HttpStatus.BAD_REQUEST
-                );
-            }
-            return buildResponse("Faltan campos obligatorios para completar la operacion.", "MISSING_REQUIRED_FIELDS", HttpStatus.BAD_REQUEST);
-        }
-
         return buildResponse("Violacion de integridad de datos.", "DATA_INTEGRITY_ERROR", HttpStatus.CONFLICT);
     }
 

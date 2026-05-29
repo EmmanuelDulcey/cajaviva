@@ -4,8 +4,10 @@ import com.cajaviva.cajaviva.auth.security.RestAccessDeniedHandler;
 import com.cajaviva.cajaviva.auth.security.RestAuthenticationEntryPoint;
 import com.cajaviva.cajaviva.auth.service.JwtService;
 import com.cajaviva.cajaviva.config.SecurityConfig;
+import com.cajaviva.cajaviva.entity.Account;
 import com.cajaviva.cajaviva.entity.LiquidityProjection;
 import com.cajaviva.cajaviva.service.LiquidityProjectionService;
+import com.cajaviva.cajaviva.support.WithAuthenticatedUser;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -13,7 +15,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -33,6 +34,9 @@ class LiquidityProjectionControllerSecurityTest {
     @MockBean LiquidityProjectionService liquidityProjectionService;
     @MockBean JwtService jwtService;
 
+    private final UUID currentUserId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private final UUID otherUserId = UUID.fromString("00000000-0000-0000-0000-000000000002");
+
     @Test
     void unauthenticatedEndpointsReturn401() throws Exception {
         UUID id = UUID.randomUUID();
@@ -45,12 +49,78 @@ class LiquidityProjectionControllerSecurityTest {
     }
 
     @Test
-    @WithMockUser
+    @WithAuthenticatedUser
+    void getAllProjections_ReturnsOnlyCurrentUserProjections() throws Exception {
+        when(liquidityProjectionService.findByUserId(currentUserId)).thenReturn(List.of());
+        mockMvc.perform(get("/api/liquidity-projections")).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithAuthenticatedUser
+    void getProjectionById_OwnProjection_Returns200() throws Exception {
+        UUID projId = UUID.randomUUID();
+        Account account = new Account();
+        account.setUserId(currentUserId);
+        LiquidityProjection projection = new LiquidityProjection();
+        projection.setId(projId);
+        projection.setAccount(account);
+        when(liquidityProjectionService.findById(projId)).thenReturn(projection);
+
+        mockMvc.perform(get("/api/liquidity-projections/" + projId)).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithAuthenticatedUser
+    void getProjectionById_OtherUsersProjection_Returns403() throws Exception {
+        UUID projId = UUID.randomUUID();
+        Account account = new Account();
+        account.setUserId(otherUserId);
+        LiquidityProjection projection = new LiquidityProjection();
+        projection.setId(projId);
+        projection.setAccount(account);
+        when(liquidityProjectionService.findById(projId)).thenReturn(projection);
+
+        mockMvc.perform(get("/api/liquidity-projections/" + projId)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAuthenticatedUser
+    void getProjectionsByAccount_OwnAccount_Returns200() throws Exception {
+        UUID accountId = UUID.randomUUID();
+        Account account = new Account();
+        account.setId(accountId);
+        account.setUserId(currentUserId);
+        LiquidityProjection projection = new LiquidityProjection();
+        projection.setAccount(account);
+        when(liquidityProjectionService.findByAccountId(accountId)).thenReturn(List.of(projection));
+
+        mockMvc.perform(get("/api/liquidity-projections/account/" + accountId)).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithAuthenticatedUser
+    void getProjectionsByAccount_OtherUsersAccount_Returns403() throws Exception {
+        UUID accountId = UUID.randomUUID();
+        Account account = new Account();
+        account.setId(accountId);
+        account.setUserId(otherUserId);
+        LiquidityProjection projection = new LiquidityProjection();
+        projection.setAccount(account);
+        when(liquidityProjectionService.findByAccountId(accountId)).thenReturn(List.of(projection));
+
+        mockMvc.perform(get("/api/liquidity-projections/account/" + accountId)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAuthenticatedUser
     void authenticatedEndpointsAreAccessible() throws Exception {
         UUID id = UUID.randomUUID();
+        Account account = new Account();
+        account.setUserId(currentUserId);
         LiquidityProjection p = new LiquidityProjection();
         p.setId(id);
-        when(liquidityProjectionService.findAll()).thenReturn(List.of(p));
+        p.setAccount(account);
+        when(liquidityProjectionService.findByUserId(currentUserId)).thenReturn(List.of(p));
         when(liquidityProjectionService.findById(id)).thenReturn(p);
         when(liquidityProjectionService.findByAccountId(id)).thenReturn(List.of(p));
         when(liquidityProjectionService.create(any(LiquidityProjection.class))).thenReturn(p);

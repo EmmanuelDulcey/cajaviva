@@ -4,8 +4,11 @@ import com.cajaviva.cajaviva.auth.security.RestAccessDeniedHandler;
 import com.cajaviva.cajaviva.auth.security.RestAuthenticationEntryPoint;
 import com.cajaviva.cajaviva.auth.service.JwtService;
 import com.cajaviva.cajaviva.config.SecurityConfig;
+import com.cajaviva.cajaviva.entity.Account;
 import com.cajaviva.cajaviva.entity.Alert;
+import com.cajaviva.cajaviva.entity.LiquidityProjection;
 import com.cajaviva.cajaviva.service.AlertService;
+import com.cajaviva.cajaviva.support.WithAuthenticatedUser;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -13,7 +16,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -33,6 +35,9 @@ class AlertControllerSecurityTest {
     @MockBean AlertService alertService;
     @MockBean JwtService jwtService;
 
+    private final UUID currentUserId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private final UUID otherUserId = UUID.fromString("00000000-0000-0000-0000-000000000002");
+
     @Test
     void unauthenticatedEndpointsReturn401() throws Exception {
         UUID id = UUID.randomUUID();
@@ -45,12 +50,86 @@ class AlertControllerSecurityTest {
     }
 
     @Test
-    @WithMockUser
+    @WithAuthenticatedUser
+    void getAllAlerts_ReturnsOnlyCurrentUserAlerts() throws Exception {
+        when(alertService.findByUserId(currentUserId)).thenReturn(List.of());
+        mockMvc.perform(get("/api/alerts")).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithAuthenticatedUser
+    void getAlertById_OwnAlert_Returns200() throws Exception {
+        UUID alertId = UUID.randomUUID();
+        Account account = new Account();
+        account.setUserId(currentUserId);
+        LiquidityProjection projection = new LiquidityProjection();
+        projection.setAccount(account);
+        Alert alert = new Alert();
+        alert.setId(alertId);
+        alert.setLiquidityProjection(projection);
+        when(alertService.findById(alertId)).thenReturn(alert);
+
+        mockMvc.perform(get("/api/alerts/" + alertId)).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithAuthenticatedUser
+    void getAlertById_OtherUsersAlert_Returns403() throws Exception {
+        UUID alertId = UUID.randomUUID();
+        Account account = new Account();
+        account.setUserId(otherUserId);
+        LiquidityProjection projection = new LiquidityProjection();
+        projection.setAccount(account);
+        Alert alert = new Alert();
+        alert.setId(alertId);
+        alert.setLiquidityProjection(projection);
+        when(alertService.findById(alertId)).thenReturn(alert);
+
+        mockMvc.perform(get("/api/alerts/" + alertId)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAuthenticatedUser
+    void getAlertsByProjection_OwnProjection_Returns200() throws Exception {
+        UUID projectionId = UUID.randomUUID();
+        Account account = new Account();
+        account.setUserId(currentUserId);
+        LiquidityProjection projection = new LiquidityProjection();
+        projection.setAccount(account);
+        Alert alert = new Alert();
+        alert.setLiquidityProjection(projection);
+        when(alertService.findByLiquidityProjectionId(projectionId)).thenReturn(List.of(alert));
+
+        mockMvc.perform(get("/api/alerts/projection/" + projectionId)).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithAuthenticatedUser
+    void getAlertsByProjection_OtherUsersProjection_Returns403() throws Exception {
+        UUID projectionId = UUID.randomUUID();
+        Account account = new Account();
+        account.setUserId(otherUserId);
+        LiquidityProjection projection = new LiquidityProjection();
+        projection.setAccount(account);
+        Alert alert = new Alert();
+        alert.setLiquidityProjection(projection);
+        when(alertService.findByLiquidityProjectionId(projectionId)).thenReturn(List.of(alert));
+
+        mockMvc.perform(get("/api/alerts/projection/" + projectionId)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAuthenticatedUser
     void authenticatedEndpointsAreAccessible() throws Exception {
         UUID id = UUID.randomUUID();
+        Account account = new Account();
+        account.setUserId(currentUserId);
+        LiquidityProjection projection = new LiquidityProjection();
+        projection.setAccount(account);
         Alert alert = new Alert();
         alert.setId(id);
-        when(alertService.findAll()).thenReturn(List.of(alert));
+        alert.setLiquidityProjection(projection);
+        when(alertService.findByUserId(currentUserId)).thenReturn(List.of(alert));
         when(alertService.findById(id)).thenReturn(alert);
         when(alertService.findByLiquidityProjectionId(id)).thenReturn(List.of(alert));
         when(alertService.create(any(Alert.class))).thenReturn(alert);

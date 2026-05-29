@@ -57,4 +57,9 @@ public class AlertServiceImpl implements AlertService {
     public List<Alert> findByLiquidityProjectionId(UUID projection_id) {
         return alertRepository.findByLiquidityProjection_Id(projection_id);
     }
+
+    @Override
+    public List<Alert> findByUserId(UUID userId) {
+        return alertRepository.findByLiquidityProjection_Account_UserId(userId);
+    }
 }

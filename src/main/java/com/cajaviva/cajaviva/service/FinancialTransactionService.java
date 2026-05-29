@@ -12,4 +12,5 @@ public interface FinancialTransactionService {
     FinancialTransaction update(UUID id, FinancialTransaction transaction);
     void delete(UUID id);
     List<FinancialTransaction> findByAccountId(UUID account_id);
+    List<FinancialTransaction> findByUserId(UUID userId);
 }
