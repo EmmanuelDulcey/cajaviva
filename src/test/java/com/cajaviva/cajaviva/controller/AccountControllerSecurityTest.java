@@ -6,6 +6,7 @@ import com.cajaviva.cajaviva.auth.service.JwtService;
 import com.cajaviva.cajaviva.config.SecurityConfig;
 import com.cajaviva.cajaviva.entity.Account;
 import com.cajaviva.cajaviva.service.AccountService;
+import com.cajaviva.cajaviva.service.LiquidityProjectionService;
 import com.cajaviva.cajaviva.support.WithAuthenticatedUser;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,7 @@ class AccountControllerSecurityTest {
     @Autowired
     private MockMvc mockMvc;
     @MockBean private AccountService accountService;
+    @MockBean private LiquidityProjectionService liquidityProjectionService;
     @MockBean private JwtService jwtService;
 
     private final UUID currentUserId = UUID.fromString("00000000-0000-0000-0000-000000000001");

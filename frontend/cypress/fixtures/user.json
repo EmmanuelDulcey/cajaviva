@@ -1,5 +1,6 @@
 {
-  "id": 1,
-  "name": "Usuario de Prueba",
-  "email": "sample@email.com"
+  "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "email": "sample@email.com",
+  "roles": ["ROLE_USER"],
+  "expiresAt": "2026-12-31T23:59:59Z"
 }
