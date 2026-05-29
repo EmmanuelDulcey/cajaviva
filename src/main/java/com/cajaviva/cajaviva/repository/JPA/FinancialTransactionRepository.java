@@ -11,6 +11,7 @@ import java.util.UUID;
 public interface FinancialTransactionRepository extends JpaRepository<FinancialTransaction, UUID> {
     List<FinancialTransaction> findByAccount(Account account);
     List<FinancialTransaction> findByAccount_Id(UUID accountId);
+    List<FinancialTransaction> findTop5ByAccount_UserIdOrderByDateDesc(UUID userId);
     List<FinancialTransaction> findByCategory(Category category);
     List<FinancialTransaction> findByCategory_Id(UUID categoryId);
     List<FinancialTransaction> findByStatus(Integer status);

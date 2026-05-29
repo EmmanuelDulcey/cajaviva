@@ -4,7 +4,8 @@ export default defineConfig({
   allowCypressEnv: false,
 
   e2e: {
-    setupNodeEvents(on, config) {
+    baseUrl: "http://localhost:5173",
+    setupNodeEvents() {
       // implement node event listeners here
     },
   },
