@@ -2,6 +2,8 @@ package com.cajaviva.cajaviva.controller;
 
 import com.cajaviva.cajaviva.entity.User;
 import com.cajaviva.cajaviva.service.UserService;
+import com.cajaviva.cajaviva.exception.ForbiddenAccessException;
+import com.cajaviva.cajaviva.utilities.SecurityUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -13,7 +15,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -35,8 +36,9 @@ public class UserController {
             content = @Content(mediaType = "application/json", schema = @Schema(type = "array", implementation = User.class)))
     }
 )
-public List<User> getAll() {
-        return service.findAll();
+public User getAll() {
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        return service.findById(currentUserId);
     }
 
     @GetMapping("/{id}")
@@ -51,7 +53,11 @@ public List<User> getAll() {
     }
 )
 public User getById(@PathVariable UUID id) {
-        return service.findById(id);
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        if (!id.equals(currentUserId)) {
+            throw new ForbiddenAccessException("Cannot access another user's profile");
+        }
+        return service.findById(currentUserId);
     }
 
     @PostMapping

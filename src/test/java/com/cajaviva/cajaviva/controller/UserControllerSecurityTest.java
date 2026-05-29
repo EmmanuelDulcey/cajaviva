@@ -6,6 +6,7 @@ import com.cajaviva.cajaviva.auth.service.JwtService;
 import com.cajaviva.cajaviva.config.SecurityConfig;
 import com.cajaviva.cajaviva.entity.User;
 import com.cajaviva.cajaviva.service.UserService;
+import com.cajaviva.cajaviva.support.WithAuthenticatedUser;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -13,15 +14,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -41,6 +38,9 @@ class UserControllerSecurityTest {
     @MockBean
     private JwtService jwtService;
 
+    private final UUID currentUserId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private final UUID otherUserId = UUID.fromString("00000000-0000-0000-0000-000000000002");
+
     @Test
     void unauthenticatedEndpointsReturn401() throws Exception {
         UUID id = UUID.randomUUID();
@@ -52,10 +52,35 @@ class UserControllerSecurityTest {
     }
 
     @Test
-    @WithMockUser
+    @WithAuthenticatedUser
+    void getAll_ReturnsOwnProfile() throws Exception {
+        User user = new User();
+        user.setId(currentUserId);
+        when(userService.findById(currentUserId)).thenReturn(user);
+
+        mockMvc.perform(get("/users")).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithAuthenticatedUser
+    void getById_OwnUser_Returns200() throws Exception {
+        User user = new User();
+        user.setId(currentUserId);
+        when(userService.findById(currentUserId)).thenReturn(user);
+
+        mockMvc.perform(get("/users/" + currentUserId)).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithAuthenticatedUser
+    void getById_OtherUser_Returns403() throws Exception {
+        mockMvc.perform(get("/users/" + otherUserId)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAuthenticatedUser
     void authenticatedEndpointsAreAccessible() throws Exception {
-        UUID id = UUID.randomUUID();
-        when(userService.findAll()).thenReturn(List.of(new User()));
+        UUID id = currentUserId;
         User user = new User();
         user.setId(id);
         when(userService.findById(id)).thenReturn(user);

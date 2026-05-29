@@ -11,4 +11,5 @@ public interface AlertService {
     Alert update(UUID id, Alert alert);
     void delete(UUID id);
     List<Alert> findByLiquidityProjectionId(UUID projection_id);
+    List<Alert> findByUserId(UUID userId);
 }

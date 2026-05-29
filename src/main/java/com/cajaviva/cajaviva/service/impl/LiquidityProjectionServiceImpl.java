@@ -73,8 +73,12 @@ public class LiquidityProjectionServiceImpl implements LiquidityProjectionServic
     }
 
     @Override
+    public List<LiquidityProjection> findByUserId(UUID userId) {
+        return liquidityProjectionRepository.findByAccount_UserId(userId);
+    }
+
+    @Override
     public List<LiquidityProjection> calculateProjection(UUID accountId, LocalDate startDate, LocalDate endDate) {
-        // VALIDACIÓN DE FECHAS
         LocalDate today = LocalDate.now();
         if (startDate.isBefore(today)) {
             throw new IllegalArgumentException("La fecha de inicio no puede ser en el pasado");
@@ -86,14 +90,12 @@ public class LiquidityProjectionServiceImpl implements LiquidityProjectionServic
             throw new IllegalArgumentException("El rango de fechas no puede ser mayor a 1 año");
         }
 
-        // OBTENER TRANSACCIONES POR CUENTA Y RANGO DE FECHAS
         List<com.cajaviva.cajaviva.entity.FinancialTransaction> transactions = financialTransactionRepository.findByAccount_Id(accountId);
         java.util.Map<LocalDate, java.math.BigDecimal> sumByDate = new java.util.HashMap<>();
         transactions.stream()
                 .filter(tx -> !tx.getDate().toLocalDate().isBefore(startDate) && !tx.getDate().toLocalDate().isAfter(endDate))
                 .forEach(tx -> sumByDate.merge(tx.getDate().toLocalDate(), tx.getValue(), java.math.BigDecimal::add));
 
-        // CALCULAR EL SALDO INICIAL - para simplificar, se toma el balance de la cuenta en base de datos
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new com.cajaviva.cajaviva.exception.ResourceNotFoundException("Cuenta no encontrada"));
         java.math.BigDecimal saldo = java.math.BigDecimal.valueOf(account.getBalance());
 

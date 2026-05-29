@@ -4,8 +4,10 @@ import com.cajaviva.cajaviva.auth.security.RestAccessDeniedHandler;
 import com.cajaviva.cajaviva.auth.security.RestAuthenticationEntryPoint;
 import com.cajaviva.cajaviva.auth.service.JwtService;
 import com.cajaviva.cajaviva.config.SecurityConfig;
+import com.cajaviva.cajaviva.entity.Account;
 import com.cajaviva.cajaviva.entity.RecurrentTransaction;
 import com.cajaviva.cajaviva.service.RecurrentTransactionService;
+import com.cajaviva.cajaviva.support.WithAuthenticatedUser;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -13,7 +15,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -33,6 +34,9 @@ class RecurrentTransactionControllerSecurityTest {
     @MockBean RecurrentTransactionService recurrentTransactionService;
     @MockBean JwtService jwtService;
 
+    private final UUID currentUserId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private final UUID otherUserId = UUID.fromString("00000000-0000-0000-0000-000000000002");
+
     @Test
     void unauthenticatedEndpointsReturn401() throws Exception {
         UUID id = UUID.randomUUID();
@@ -45,12 +49,78 @@ class RecurrentTransactionControllerSecurityTest {
     }
 
     @Test
-    @WithMockUser
+    @WithAuthenticatedUser
+    void getAllRecurrentTransactions_ReturnsOnlyCurrentUserTransactions() throws Exception {
+        when(recurrentTransactionService.findByUserId(currentUserId)).thenReturn(List.of());
+        mockMvc.perform(get("/api/recurrent-transactions")).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithAuthenticatedUser
+    void getRecurrentTransactionById_OwnTransaction_Returns200() throws Exception {
+        UUID txId = UUID.randomUUID();
+        Account account = new Account();
+        account.setUserId(currentUserId);
+        RecurrentTransaction tx = new RecurrentTransaction();
+        tx.setId(txId);
+        tx.setAccount(account);
+        when(recurrentTransactionService.findById(txId)).thenReturn(tx);
+
+        mockMvc.perform(get("/api/recurrent-transactions/" + txId)).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithAuthenticatedUser
+    void getRecurrentTransactionById_OtherUsersTransaction_Returns403() throws Exception {
+        UUID txId = UUID.randomUUID();
+        Account account = new Account();
+        account.setUserId(otherUserId);
+        RecurrentTransaction tx = new RecurrentTransaction();
+        tx.setId(txId);
+        tx.setAccount(account);
+        when(recurrentTransactionService.findById(txId)).thenReturn(tx);
+
+        mockMvc.perform(get("/api/recurrent-transactions/" + txId)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAuthenticatedUser
+    void getByAccount_OwnAccount_Returns200() throws Exception {
+        UUID accountId = UUID.randomUUID();
+        Account account = new Account();
+        account.setId(accountId);
+        account.setUserId(currentUserId);
+        RecurrentTransaction tx = new RecurrentTransaction();
+        tx.setAccount(account);
+        when(recurrentTransactionService.findByAccountId(accountId)).thenReturn(List.of(tx));
+
+        mockMvc.perform(get("/api/recurrent-transactions/account/" + accountId)).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithAuthenticatedUser
+    void getByAccount_OtherUsersAccount_Returns403() throws Exception {
+        UUID accountId = UUID.randomUUID();
+        Account account = new Account();
+        account.setId(accountId);
+        account.setUserId(otherUserId);
+        RecurrentTransaction tx = new RecurrentTransaction();
+        tx.setAccount(account);
+        when(recurrentTransactionService.findByAccountId(accountId)).thenReturn(List.of(tx));
+
+        mockMvc.perform(get("/api/recurrent-transactions/account/" + accountId)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAuthenticatedUser
     void authenticatedEndpointsAreAccessible() throws Exception {
         UUID id = UUID.randomUUID();
+        Account account = new Account();
+        account.setUserId(currentUserId);
         RecurrentTransaction tx = new RecurrentTransaction();
         tx.setId(id);
-        when(recurrentTransactionService.findAll()).thenReturn(List.of(tx));
+        tx.setAccount(account);
+        when(recurrentTransactionService.findByUserId(currentUserId)).thenReturn(List.of(tx));
         when(recurrentTransactionService.findById(id)).thenReturn(tx);
         when(recurrentTransactionService.findByAccountId(id)).thenReturn(List.of(tx));
         when(recurrentTransactionService.create(any(RecurrentTransaction.class))).thenReturn(tx);
