@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getAuthRoute, AUTH_ROUTES, type AuthRoute } from './features/auth/authRoutes';
 import { LoginPage } from './features/auth/pages/LoginPage';
 import { RegisterPage } from './features/auth/pages/RegisterPage';
@@ -23,27 +23,30 @@ function AppRoutes() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const navigateTo = (route: AuthRoute) => {
+  const navigateTo = useCallback((route: AuthRoute) => {
     if (window.location.pathname !== route) {
       window.history.pushState({}, '', route);
     }
     setCurrentRoute(route);
-  };
+  }, []);
 
   useEffect(() => {
     if (isBootstrapping) {
       return;
     }
 
-    if (isAuthenticated && currentRoute !== AUTH_ROUTES.app) {
-      navigateTo(AUTH_ROUTES.app);
-      return;
-    }
+    const targetRoute =
+      isAuthenticated && currentRoute !== AUTH_ROUTES.app
+        ? AUTH_ROUTES.app
+        : !isAuthenticated && currentRoute === AUTH_ROUTES.app
+          ? AUTH_ROUTES.login
+          : null;
 
-    if (!isAuthenticated && currentRoute === AUTH_ROUTES.app) {
-      navigateTo(AUTH_ROUTES.login);
+    if (targetRoute) {
+      const timeoutId = window.setTimeout(() => navigateTo(targetRoute), 0);
+      return () => window.clearTimeout(timeoutId);
     }
-  }, [currentRoute, isAuthenticated, isBootstrapping]);
+  }, [currentRoute, isAuthenticated, isBootstrapping, navigateTo]);
 
   const page = useMemo(() => {
     if (isBootstrapping) {
@@ -80,7 +83,7 @@ function AppRoutes() {
         onLoginSuccess={() => navigateTo(AUTH_ROUTES.app)}
       />
     );
-  }, [currentRoute, isAuthenticated, isBootstrapping, logout, shouldAnimateLoginIntro, user]);
+  }, [currentRoute, isAuthenticated, isBootstrapping, logout, navigateTo, shouldAnimateLoginIntro, user]);
 
   return page;
 }
