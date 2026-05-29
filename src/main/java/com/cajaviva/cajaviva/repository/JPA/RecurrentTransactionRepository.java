@@ -16,4 +16,5 @@ public interface RecurrentTransactionRepository extends JpaRepository<RecurrentT
     List<RecurrentTransaction> findByStatus(Integer status);
     List<RecurrentTransaction> findByFrequency(Integer frequency);
     List<RecurrentTransaction> findByCustomFrequency(Integer customFrequency);
+    List<RecurrentTransaction> findByAccount_UserId(UUID userId);
 }

@@ -12,4 +12,5 @@ public interface AlertRepository extends JpaRepository<Alert, UUID> {
     List<Alert> findByStatus(Integer status);
     List<Alert> findByType(Integer type);
     List<Alert> findByLiquidityProjection_Id(UUID liquidityProjectionId);
+    List<Alert> findByLiquidityProjection_Account_UserId(UUID userId);
 }

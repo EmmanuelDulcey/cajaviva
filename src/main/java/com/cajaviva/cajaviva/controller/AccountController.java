@@ -3,6 +3,8 @@ package com.cajaviva.cajaviva.controller;
 import com.cajaviva.cajaviva.entity.Account;
 import com.cajaviva.cajaviva.service.AccountService;
 import com.cajaviva.cajaviva.exception.ResourceNotFoundException;
+import com.cajaviva.cajaviva.exception.ForbiddenAccessException;
+import com.cajaviva.cajaviva.utilities.SecurityUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,7 +39,8 @@ public class AccountController {
     }
 )
 public ResponseEntity<List<Account>> getAllAccounts() {
-        List<Account> accounts = accountService.findAll();
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        List<Account> accounts = accountService.findByUserId(currentUserId);
         return ResponseEntity.ok(accounts);
     }
 
@@ -53,7 +56,11 @@ public ResponseEntity<List<Account>> getAllAccounts() {
     }
 )
 public ResponseEntity<List<Account>> getAccountsByUser(@PathVariable("user_id") UUID userId) {
-        List<Account> accounts = accountService.findByUserId(userId);
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        if (!userId.equals(currentUserId)) {
+            throw new ForbiddenAccessException("Cannot access accounts of another user");
+        }
+        List<Account> accounts = accountService.findByUserId(currentUserId);
         return ResponseEntity.ok(accounts);
     }
 
@@ -69,8 +76,12 @@ public ResponseEntity<List<Account>> getAccountsByUser(@PathVariable("user_id") 
     }
 )
 public ResponseEntity<Account> getAccountById(@PathVariable UUID id) {
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
         Account account = accountService.findById(id);
         if (account == null) throw new ResourceNotFoundException("Account not found");
+        if (!account.getUserId().equals(currentUserId)) {
+            throw new ForbiddenAccessException("Account does not belong to the current user");
+        }
         return ResponseEntity.ok(account);
     }
 
@@ -88,6 +99,8 @@ public ResponseEntity<Account> getAccountById(@PathVariable UUID id) {
     }
 )
 public ResponseEntity<Account> createAccount(@RequestBody Account account) {
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        account.setUserId(currentUserId);
         Account created = accountService.create(account);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }

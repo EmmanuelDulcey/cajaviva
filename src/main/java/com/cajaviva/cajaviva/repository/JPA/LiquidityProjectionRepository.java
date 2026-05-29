@@ -11,4 +11,5 @@ public interface LiquidityProjectionRepository extends JpaRepository<LiquidityPr
     List<LiquidityProjection> findByAccount(Account account);
     List<LiquidityProjection> findByAccount_Id(UUID accountId);
     List<LiquidityProjection> findByProjectionDate(java.time.LocalDate projectionDate);
+    List<LiquidityProjection> findByAccount_UserId(UUID userId);
 }
