@@ -67,4 +67,9 @@ public class LiquidityProjectionServiceImpl implements LiquidityProjectionServic
     public List<LiquidityProjection> findByAccountId(UUID account_id) {
         return liquidityProjectionRepository.findByAccount_Id(account_id);
     }
+
+    @Override
+    public List<LiquidityProjection> findByUserId(UUID userId) {
+        return liquidityProjectionRepository.findByAccount_UserId(userId);
+    }
 }

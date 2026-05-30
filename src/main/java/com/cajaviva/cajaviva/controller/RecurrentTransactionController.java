@@ -2,6 +2,8 @@ package com.cajaviva.cajaviva.controller;
 
 import com.cajaviva.cajaviva.service.RecurrentTransactionService;
 import com.cajaviva.cajaviva.entity.RecurrentTransaction;
+import com.cajaviva.cajaviva.exception.ForbiddenAccessException;
+import com.cajaviva.cajaviva.utilities.SecurityUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,7 +39,8 @@ public class RecurrentTransactionController {
         }
     )
     public List<RecurrentTransaction> getAllRecurrentTransactions() {
-        return recurrentTransactionService.findAll();
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        return recurrentTransactionService.findByUserId(currentUserId);
     }
 
     @GetMapping("/{id}")
@@ -52,7 +55,12 @@ public class RecurrentTransactionController {
         }
     )
     public RecurrentTransaction getRecurrentTransactionById(@PathVariable UUID id) {
-        return recurrentTransactionService.findById(id);
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        RecurrentTransaction transaction = recurrentTransactionService.findById(id);
+        if (!transaction.getAccount().getUserId().equals(currentUserId)) {
+            throw new ForbiddenAccessException("Recurrent transaction does not belong to the current user");
+        }
+        return transaction;
     }
 
     @GetMapping("/account/{account_id}")
@@ -66,7 +74,12 @@ public class RecurrentTransactionController {
         }
     )
     public List<RecurrentTransaction> getByAccount(@PathVariable("account_id") UUID account_id) {
-        return recurrentTransactionService.findByAccountId(account_id);
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        List<RecurrentTransaction> transactions = recurrentTransactionService.findByAccountId(account_id);
+        if (!transactions.isEmpty() && !transactions.get(0).getAccount().getUserId().equals(currentUserId)) {
+            throw new ForbiddenAccessException("Account does not belong to the current user");
+        }
+        return transactions;
     }
 
     @PostMapping
