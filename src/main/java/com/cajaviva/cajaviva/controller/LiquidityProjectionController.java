@@ -2,6 +2,9 @@ package com.cajaviva.cajaviva.controller;
 
 import com.cajaviva.cajaviva.service.LiquidityProjectionService;
 import com.cajaviva.cajaviva.entity.LiquidityProjection;
+import com.cajaviva.cajaviva.dto.LiquidityProjectionRequest;
+import com.cajaviva.cajaviva.exception.ForbiddenAccessException;
+import com.cajaviva.cajaviva.utilities.SecurityUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,7 +15,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
 import java.util.List;
 import java.util.UUID;
@@ -37,7 +39,8 @@ public class LiquidityProjectionController {
         }
     )
     public List<LiquidityProjection> getAllProjections() {
-        return liquidityProjectionService.findAll();
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        return liquidityProjectionService.findByUserId(currentUserId);
     }
 
     @GetMapping("/{id}")
@@ -52,7 +55,12 @@ public class LiquidityProjectionController {
         }
     )
     public LiquidityProjection getProjectionById(@PathVariable UUID id) {
-        return liquidityProjectionService.findById(id);
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        LiquidityProjection projection = liquidityProjectionService.findById(id);
+        if (!projection.getAccount().getUserId().equals(currentUserId)) {
+            throw new ForbiddenAccessException("Projection does not belong to the current user");
+        }
+        return projection;
     }
 
     @GetMapping("/account/{account_id}")
@@ -66,12 +74,17 @@ public class LiquidityProjectionController {
         }
     )
     public List<LiquidityProjection> getByAccount(@PathVariable("account_id") UUID account_id) {
-        return liquidityProjectionService.findByAccountId(account_id);
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        List<LiquidityProjection> projections = liquidityProjectionService.findByAccountId(account_id);
+        if (!projections.isEmpty() && !projections.get(0).getAccount().getUserId().equals(currentUserId)) {
+            throw new ForbiddenAccessException("Account does not belong to the current user");
+        }
+        return projections;
     }
 
     @PostMapping
     @Operation(summary = "Crear proyección", tags = {"LiquidityProjection"},
-        requestBody = @RequestBody(
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = LiquidityProjection.class),
                 examples = {@ExampleObject(value = "{\n  \"projectedBalance\": 5000.00,\n  \"projectionDate\": \"2026-06-01\",\n  \"notes\": \"Proyección mensual\",\n  \"account\": {\"id\": \"11111111-2222-3333-4444-555555555555\"}\n}")}
@@ -91,7 +104,7 @@ public class LiquidityProjectionController {
         parameters = {
             @Parameter(name = "id", description = "UUID de la proyección", example = "11111111-2222-3333-4444-555555555555")
         },
-        requestBody = @RequestBody(
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = LiquidityProjection.class),
                 examples = {@ExampleObject(value = "{\n  \"projectedBalance\": 7500.00,\n  \"projectionDate\": \"2026-06-15\",\n  \"notes\": \"Proyección actualizada\",\n  \"account\": {\"id\": \"11111111-2222-3333-4444-555555555555\"}\n}")}
@@ -119,5 +132,20 @@ public class LiquidityProjectionController {
     )
     public void deleteProjection(@PathVariable UUID id) {
         liquidityProjectionService.delete(id);
+    }
+
+    @PostMapping("/calculate")
+    @Operation(summary = "Calcular proyección de liquidez en rango de fechas", tags = {"LiquidityProjection"},
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            required = true,
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = LiquidityProjectionRequest.class))
+        ),
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Lista de proyecciones calculadas",
+                content = @Content(mediaType = "application/json", schema = @Schema(type = "array", implementation = LiquidityProjection.class)))
+        }
+    )
+    public List<LiquidityProjection> calculateProjection(@RequestBody LiquidityProjectionRequest req) {
+        return liquidityProjectionService.calculateProjection(req.getAccountId(), req.getStartDate(), req.getEndDate());
     }
 }

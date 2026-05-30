@@ -2,6 +2,8 @@ package com.cajaviva.cajaviva.controller;
 
 import com.cajaviva.cajaviva.service.AlertService;
 import com.cajaviva.cajaviva.entity.Alert;
+import com.cajaviva.cajaviva.exception.ForbiddenAccessException;
+import com.cajaviva.cajaviva.utilities.SecurityUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,7 +39,8 @@ public class AlertController {
         }
     )
     public List<Alert> getAllAlerts() {
-        return alertService.findAll();
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        return alertService.findByUserId(currentUserId);
     }
 
     @GetMapping("/{id}")
@@ -52,7 +55,12 @@ public class AlertController {
         }
     )
     public Alert getAlertById(@PathVariable UUID id) {
-        return alertService.findById(id);
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        Alert alert = alertService.findById(id);
+        if (!alert.getLiquidityProjection().getAccount().getUserId().equals(currentUserId)) {
+            throw new ForbiddenAccessException("Alert does not belong to the current user");
+        }
+        return alert;
     }
 
     @GetMapping("/projection/{projection_id}")
@@ -66,7 +74,12 @@ public class AlertController {
         }
     )
     public List<Alert> getByProjection(@PathVariable("projection_id") UUID projection_id) {
-        return alertService.findByLiquidityProjectionId(projection_id);
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        List<Alert> alerts = alertService.findByLiquidityProjectionId(projection_id);
+        if (!alerts.isEmpty() && !alerts.get(0).getLiquidityProjection().getAccount().getUserId().equals(currentUserId)) {
+            throw new ForbiddenAccessException("Projection does not belong to the current user");
+        }
+        return alerts;
     }
 
     @PostMapping

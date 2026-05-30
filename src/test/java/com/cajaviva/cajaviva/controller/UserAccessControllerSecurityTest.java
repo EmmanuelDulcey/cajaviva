@@ -6,6 +6,7 @@ import com.cajaviva.cajaviva.auth.service.JwtService;
 import com.cajaviva.cajaviva.config.SecurityConfig;
 import com.cajaviva.cajaviva.entity.UserAccess;
 import com.cajaviva.cajaviva.service.UserAccessService;
+import com.cajaviva.cajaviva.support.WithAuthenticatedUser;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -13,7 +14,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -33,6 +33,9 @@ class UserAccessControllerSecurityTest {
     @MockBean UserAccessService userAccessService;
     @MockBean JwtService jwtService;
 
+    private final UUID currentUserId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private final UUID otherUserId = UUID.fromString("00000000-0000-0000-0000-000000000002");
+
     @Test
     void unauthenticatedEndpointsReturn401() throws Exception {
         UUID id = UUID.randomUUID();
@@ -46,20 +49,64 @@ class UserAccessControllerSecurityTest {
     }
 
     @Test
-    @WithMockUser
+    @WithAuthenticatedUser
+    void getAllUserAccesses_ReturnsOnlyCurrentUserAccesses() throws Exception {
+        when(userAccessService.findByUserId(currentUserId)).thenReturn(List.of());
+        mockMvc.perform(get("/api/user-accesses")).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithAuthenticatedUser
+    void getById_OwnAccess_Returns200() throws Exception {
+        UUID accessId = UUID.randomUUID();
+        UserAccess ua = new UserAccess();
+        ua.setId(accessId);
+        ua.setUserId(currentUserId);
+        when(userAccessService.findById(accessId)).thenReturn(ua);
+
+        mockMvc.perform(get("/api/user-accesses/" + accessId)).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithAuthenticatedUser
+    void getById_OtherUsersAccess_Returns403() throws Exception {
+        UUID accessId = UUID.randomUUID();
+        UserAccess ua = new UserAccess();
+        ua.setId(accessId);
+        ua.setUserId(otherUserId);
+        when(userAccessService.findById(accessId)).thenReturn(ua);
+
+        mockMvc.perform(get("/api/user-accesses/" + accessId)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAuthenticatedUser
+    void getByUser_OwnUser_Returns200() throws Exception {
+        when(userAccessService.findByUserId(currentUserId)).thenReturn(List.of());
+        mockMvc.perform(get("/api/user-accesses/user/" + currentUserId)).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithAuthenticatedUser
+    void getByUser_OtherUser_Returns403() throws Exception {
+        mockMvc.perform(get("/api/user-accesses/user/" + otherUserId)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAuthenticatedUser
     void authenticatedEndpointsAreAccessible() throws Exception {
         UUID id = UUID.randomUUID();
         UserAccess ua = new UserAccess();
         ua.setId(id);
-        when(userAccessService.findAll()).thenReturn(List.of(ua));
-        when(userAccessService.findByUserId(id)).thenReturn(List.of(ua));
+        ua.setUserId(currentUserId);
+        when(userAccessService.findByUserId(currentUserId)).thenReturn(List.of(ua));
         when(userAccessService.findByAccountId(id)).thenReturn(List.of(ua));
         when(userAccessService.findById(id)).thenReturn(ua);
         when(userAccessService.create(any(UserAccess.class))).thenReturn(ua);
         when(userAccessService.update(any(UUID.class), any(UserAccess.class))).thenReturn(ua);
 
         mockMvc.perform(get("/api/user-accesses")).andExpect(status().isOk());
-        mockMvc.perform(get("/api/user-accesses/user/" + id)).andExpect(status().isOk());
+        mockMvc.perform(get("/api/user-accesses/user/" + currentUserId)).andExpect(status().isOk());
         mockMvc.perform(get("/api/user-accesses/account/" + id)).andExpect(status().isOk());
         mockMvc.perform(get("/api/user-accesses/" + id)).andExpect(status().isOk());
         mockMvc.perform(post("/api/user-accesses").contentType(MediaType.APPLICATION_JSON).content("{}").with(csrf())).andExpect(status().isOk());

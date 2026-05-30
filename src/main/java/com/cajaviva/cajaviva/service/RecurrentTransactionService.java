@@ -20,4 +20,5 @@ public interface RecurrentTransactionService {
     List<RecurrentTransaction> findByFrequency(Integer frequency);
     List<RecurrentTransaction> findByCustomFrequency(Integer customFrequency);
     List<RecurrentTransaction> findByAccountId(UUID account_id);
+    List<RecurrentTransaction> findByUserId(UUID userId);
 }

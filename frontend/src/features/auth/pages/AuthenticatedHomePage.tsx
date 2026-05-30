@@ -18,6 +18,7 @@ import projectionsSidebarIcon from '../../../assets/sidebar/projections-icon.svg
 import transactionsSidebarIcon from '../../../assets/sidebar/transactions-icon.svg';
 import { Skeleton } from '../../../shared/components/skeleton/Skeleton';
 import { CategoriesPage } from '../../categories/pages/CategoriesPage';
+import { ProjectionsPage } from '../../projections/pages/ProjectionsPage';
 import { dashboardApi } from '../../dashboard/api/dashboardApi';
 import type { DashboardSummary } from '../../dashboard/types/dashboard';
 import styles from './AuthenticatedHomePage.module.css';
@@ -27,7 +28,7 @@ type AuthenticatedHomePageProps = {
   onLogout: () => void;
 };
 
-type AppSection = 'dashboard' | 'categories';
+type AppSection = 'dashboard' | 'categories' | 'projections';
 
 const formatCurrency = (amount: number, currency = 'COP') =>
   new Intl.NumberFormat('es-CO', {
@@ -177,7 +178,11 @@ export function AuthenticatedHomePage({ email, onLogout }: AuthenticatedHomePage
             <img src={transactionsSidebarIcon} alt="" aria-hidden="true" />
             Transacciones
           </button>
-          <button type="button" className={styles.navItem}>
+          <button
+            type="button"
+            className={`${styles.navItem} ${section === 'projections' ? styles.navItemActive : ''}`}
+            onClick={() => setSection('projections')}
+          >
             <img src={projectionsSidebarIcon} alt="" aria-hidden="true" />
             Proyecciones
           </button>
@@ -223,7 +228,11 @@ export function AuthenticatedHomePage({ email, onLogout }: AuthenticatedHomePage
           <span className={styles.avatar}>{userInitials}</span>
         </header>
 
-        {section === 'dashboard' ? (
+        {section === 'projections' ? (
+          <ProjectionsPage />
+        ) : section === 'categories' ? (
+          <CategoriesPage />
+        ) : (
           <>
             {dashboardLoading ? <DashboardSkeleton /> : null}
 
@@ -388,8 +397,6 @@ export function AuthenticatedHomePage({ email, onLogout }: AuthenticatedHomePage
               </>
             ) : null}
           </>
-        ) : (
-          <CategoriesPage />
         )}
       </section>
     </main>

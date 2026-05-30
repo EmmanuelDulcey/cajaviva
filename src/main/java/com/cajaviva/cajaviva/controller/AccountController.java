@@ -3,6 +3,8 @@ package com.cajaviva.cajaviva.controller;
 import com.cajaviva.cajaviva.entity.Account;
 import com.cajaviva.cajaviva.service.AccountService;
 import com.cajaviva.cajaviva.exception.ResourceNotFoundException;
+import com.cajaviva.cajaviva.exception.ForbiddenAccessException;
+import com.cajaviva.cajaviva.utilities.SecurityUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,9 +26,11 @@ import java.util.UUID;
 @Tag(name = "Account", description = "Operaciones sobre cuentas bancarias")
 public class AccountController {
     private final AccountService accountService;
+    private final com.cajaviva.cajaviva.service.LiquidityProjectionService liqudityProjectionService;
 
-    public AccountController(AccountService accountService) {
+    public AccountController(AccountService accountService, com.cajaviva.cajaviva.service.LiquidityProjectionService liqudityProjectionService) {
         this.accountService = accountService;
+        this.liqudityProjectionService = liqudityProjectionService;
     }
 
     @GetMapping
@@ -37,7 +41,8 @@ public class AccountController {
     }
 )
 public ResponseEntity<List<Account>> getAllAccounts() {
-        List<Account> accounts = accountService.findAll();
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        List<Account> accounts = accountService.findByUserId(currentUserId);
         return ResponseEntity.ok(accounts);
     }
 
@@ -53,7 +58,11 @@ public ResponseEntity<List<Account>> getAllAccounts() {
     }
 )
 public ResponseEntity<List<Account>> getAccountsByUser(@PathVariable("user_id") UUID userId) {
-        List<Account> accounts = accountService.findByUserId(userId);
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        if (!userId.equals(currentUserId)) {
+            throw new ForbiddenAccessException("Cannot access accounts of another user");
+        }
+        List<Account> accounts = accountService.findByUserId(currentUserId);
         return ResponseEntity.ok(accounts);
     }
 
@@ -68,10 +77,21 @@ public ResponseEntity<List<Account>> getAccountsByUser(@PathVariable("user_id") 
         @ApiResponse(responseCode = "404", description = "Cuenta no encontrada")
     }
 )
-public ResponseEntity<Account> getAccountById(@PathVariable UUID id) {
+public ResponseEntity<com.cajaviva.cajaviva.dto.AccountWithProjectionResponse> getAccountById(@PathVariable UUID id) {
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
         Account account = accountService.findById(id);
         if (account == null) throw new ResourceNotFoundException("Account not found");
-        return ResponseEntity.ok(account);
+        if (!account.getUserId().equals(currentUserId)) {
+            throw new ForbiddenAccessException("Account does not belong to the current user");
+        }
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.LocalDate start = today.plusDays(1);
+        java.time.LocalDate end = start.plusDays(30);
+        java.util.List<com.cajaviva.cajaviva.entity.LiquidityProjection> projection = liqudityProjectionService.calculateProjection(id, start, end);
+        com.cajaviva.cajaviva.dto.AccountWithProjectionResponse resp = new com.cajaviva.cajaviva.dto.AccountWithProjectionResponse();
+        resp.setAccount(account);
+        resp.setProjection(projection);
+        return ResponseEntity.ok(resp);
     }
 
     @PostMapping
@@ -88,6 +108,8 @@ public ResponseEntity<Account> getAccountById(@PathVariable UUID id) {
     }
 )
 public ResponseEntity<Account> createAccount(@RequestBody Account account) {
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        account.setUserId(currentUserId);
         Account created = accountService.create(account);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }

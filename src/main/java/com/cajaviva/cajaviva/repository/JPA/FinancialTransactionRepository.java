@@ -16,4 +16,5 @@ public interface FinancialTransactionRepository extends JpaRepository<FinancialT
     List<FinancialTransaction> findByCategory_Id(UUID categoryId);
     List<FinancialTransaction> findByStatus(Integer status);
     List<FinancialTransaction> findByAccountAndCategory(Account account, Category category);
+    List<FinancialTransaction> findByAccount_UserId(UUID userId);
 }
