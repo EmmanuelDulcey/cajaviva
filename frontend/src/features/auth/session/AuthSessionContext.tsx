@@ -20,6 +20,8 @@ type AuthSessionContextValue = {
 
 const AuthSessionContext = createContext<AuthSessionContextValue | undefined>(undefined);
 
+const isCypressWindow = () => Boolean((window as Window & { Cypress?: unknown }).Cypress);
+
 export function AuthSessionProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<AuthResponse | null>(null);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
@@ -29,7 +31,7 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
 
     const bootstrap = async () => {
       // 🔹 Si estamos en Cypress, fuerza a arrancar desautenticado
-      if (window.Cypress) {
+      if (isCypressWindow()) {
         setUser(null);
         setIsBootstrapping(false);
         return;
@@ -73,6 +75,7 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
   return <AuthSessionContext.Provider value={value}>{children}</AuthSessionContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuthSession() {
   const context = useContext(AuthSessionContext);
   if (!context) {
