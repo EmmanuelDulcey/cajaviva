@@ -17,6 +17,7 @@ import profileSidebarIcon from '../../../assets/sidebar/profile-icon.svg';
 import projectionsSidebarIcon from '../../../assets/sidebar/projections-icon.svg';
 import transactionsSidebarIcon from '../../../assets/sidebar/transactions-icon.svg';
 import { CategoriesPage } from '../../categories/pages/CategoriesPage';
+import { ProjectionsPage } from '../../projections/pages/ProjectionsPage';
 import styles from './AuthenticatedHomePage.module.css';
 
 type AuthenticatedHomePageProps = {
@@ -24,7 +25,7 @@ type AuthenticatedHomePageProps = {
   onLogout: () => void;
 };
 
-type AppSection = 'dashboard' | 'categories';
+type AppSection = 'dashboard' | 'categories' | 'projections';
 
 type AccountItem = {
   id: string;
@@ -67,7 +68,6 @@ const transactions: TransactionItem[] = [
 
 export function AuthenticatedHomePage({ email, onLogout }: AuthenticatedHomePageProps) {
   const userInitials = email ? email.slice(0, 2).toUpperCase() : "";
-  const userInitials = email.slice(0, 2).toUpperCase();
   const [section, setSection] = useState<AppSection>('dashboard');
 
   return (
@@ -98,7 +98,11 @@ export function AuthenticatedHomePage({ email, onLogout }: AuthenticatedHomePage
             <img src={transactionsSidebarIcon} alt="" aria-hidden="true" />
             Transacciones
           </button>
-          <button type="button" className={styles.navItem}>
+          <button
+            type="button"
+            className={`${styles.navItem} ${section === 'projections' ? styles.navItemActive : ''}`}
+            onClick={() => setSection('projections')}
+          >
             <img src={projectionsSidebarIcon} alt="" aria-hidden="true" />
             Proyecciones
           </button>
@@ -144,7 +148,11 @@ export function AuthenticatedHomePage({ email, onLogout }: AuthenticatedHomePage
           <span className={styles.avatar}>{userInitials}</span>
         </header>
 
-        {section === 'dashboard' ? (
+        {section === 'projections' ? (
+          <ProjectionsPage />
+        ) : section === 'categories' ? (
+          <CategoriesPage />
+        ) : (
           <>
             <div className={styles.greeting}>
               <h2>Hola, Ana</h2>
@@ -266,8 +274,6 @@ export function AuthenticatedHomePage({ email, onLogout }: AuthenticatedHomePage
               </article>
             </section>
           </>
-        ) : (
-          <CategoriesPage />
         )}
       </section>
     </main>
